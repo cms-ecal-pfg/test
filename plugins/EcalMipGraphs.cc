@@ -44,7 +44,7 @@ EcalMipGraphs::EcalMipGraphs(const edm::ParameterSet& iConfig) :
   thresholdNeighbor_ (iConfig.getUntrackedParameter<double>("amplitudeThresholdNeighbor", 12.0)),
   thresholdSingle_ (iConfig.getUntrackedParameter<double>("amplitudeThresholdSingle", 20.0)), 
   thresholdLoose_ (iConfig.getUntrackedParameter<double>("amplitudeThresholdLoose", 7.0)),
- fileName_ (iConfig.getUntrackedParameter<std::string>("fileName", std::string("ecalMipGraphs")))
+  fileName_ (iConfig.getUntrackedParameter<std::string>("fileName", std::string("ecalMipGraphs")))
 {
   vector<int> listDefaults;
   listDefaults.push_back(-1);
@@ -234,7 +234,7 @@ EcalMipGraphs::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     float jitter = hit.jitter();
 
     //// BE SURE TO REMOVE THIS!!!!!! TOYOKO
-    //if (ampli < 12) continue;
+    //    if (ampli < 40) continue;
 
     if (ampli > 5) recHitAmplitudeHist_->Fill(ampli);
 
@@ -441,7 +441,8 @@ EcalMipGraphs::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       ordinate[i] = df.sample(i).adc(); // accounf for possible gain !=12?
       if(df.sample(i).gainId()!=sample0GainId)
         LogWarning("EcalMipGraphs") << "Gain switch detected in evt:" <<
-          naiveEvtNum_ << " sample:" << i << " ic:" << ic << " FED:" << FEDid;
+	  //          naiveEvtNum_ << " sample:" << i << " ic:" << ic << " FED:" << FEDid;
+          naiveEvtNum_ << " sample:" << i << " ic:" << ic << " hashedIndex: " << hashedIndex << " FED:" << FEDid << " gainId: " << df.sample(i).gainId() << " adc: " << df.sample(i).adc() << " sample 0: " << df.sample(0).gainId() << " " << df.sample(0).adc() << endl;
     }
 
     TGraph oneGraph(10, abscissa,ordinate);

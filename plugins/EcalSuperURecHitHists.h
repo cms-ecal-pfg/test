@@ -108,4 +108,48 @@ class EcalSuperURecHitHists : public edm::EDAnalyzer {
 
   TFile* file;
   EcalFedMap* fedMap_;
+
+  //  int cosmicCounter_;
+
+  double thresholdCosmic_;
+  double thresholdNeighborCosmic_;
+  double thresholdSingleCosmic_;
+
+  TH2F* allFedsE1vsE8Hist_;
+  TH2F* allFedsE1vsE2mE1Hist_;
+
+  TH1F* allFedsTimingHistCosmic_;
+  
+  TH2F* allFedsTimingPhiHist_;
+  TH2F* allFedsTimingPhiHistCosmic_;
+ 
+  TH2F* allFedsTimingPhiEbpHist_;
+  TH2F* allFedsTimingPhiEbpHistCosmic_;
+
+  TH2F* allFedsTimingPhiEbmHist_;
+  TH2F* allFedsTimingPhiEbmHistCosmic_;
+
+  TH2F* cosmicOccupancyTTHist_;
+  TH2F* cosmicOccupancyHist_;
+ 
+  TH2F* cosmicAmplitudeTTHist_;  
+  TH2F* cosmicAmplitudeHist_;
+
+  TH2F* cosmicAmplitudeEtaTTHist_;  
+  TH2F* cosmicAmplitudeEtaHist_;
+  TH2F* cosmicAmplitudePhiTTHist_;  
+  TH2F* cosmicAmplitudePhiHist_;
+
+  std::map<int,TH2F*> FEDsAndOccupancyHists_;  
+  std::map<int,TH2F*> FEDsAndAmplitudeVsEtaHists_; 
+  std::map<int,TH2F*> FEDsAndAmplitudeVsPhiHists_; 
+
+  // cosmics 
+  std::map<int,TH1F*> cosmicFEDsAndTimingHists_;
+  std::map<int,TH2F*> cosmicFEDsAndOccupancyHists_;  
+  std::map<int,TH2F*> cosmicFEDsAndAmplitudeVsEtaHists_; 
+  std::map<int,TH2F*> cosmicFEDsAndAmplitudeVsPhiHists_; 
+
+  int naiveEvtNum_; 
+  int cosmicCounter_;
 };
