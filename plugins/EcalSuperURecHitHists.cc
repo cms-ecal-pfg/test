@@ -11,13 +11,13 @@
      <Notes on implementation>
 */
 
-
+ 
 #include "CaloOnlineTools/EcalTools/plugins/EcalSuperURecHitHists.h"
 #include "DataFormats/DetId/interface/DetId.h"
 #include "Geometry/CaloTopology/interface/CaloTopology.h"
 #include "Geometry/CaloEventSetup/interface/CaloTopologyRecord.h"
 #include <vector>
-
+ 
 using namespace cms;
 using namespace edm;
 using namespace std;
@@ -188,16 +188,20 @@ EcalSuperURecHitHists::analyze(const edm::Event& iEvent, const edm::EventSetup& 
 	      {
 		usedChannels_.push_back(neighborHashedIndex);
 		float thisamp = (*thishit).amplitude();
+		//if (thisamp > 3.0) E9+=thisamp; //To reduce noise maybe only include those above a certain amplitude
 		E9+=thisamp; //To reduce noise maybe only include those above a certain amplitude
 		if (thisamp > secondMin) secondMin = thisamp;
 		if (thisamp > 3.0) numXtalsinE9++;
 	      }
 	  }
-      }
+     }
     float E2 = ampli + secondMin;
     float E8 = E9-ampli;
     float E2mE1 = secondMin;
-    
+     
+    if ((ampli < 10.) && (E2 <12.) && (E9 < 12.)) continue;
+	  
+	       
     //Set some more values
     int eventnum = iEvent.id().event();
     float jitter = hit.jitter();
