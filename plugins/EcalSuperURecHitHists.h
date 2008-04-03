@@ -98,6 +98,8 @@ class EcalSuperURecHitHists : public edm::EDAnalyzer {
   TH1F* allFedsiPhiProfileHist_;
   TH1F* allFedsiEtaProfileHist_;
   TH1F* allFedsNumXtalsInE9Hist_;
+  TH1F* numberofCosmicsHist_;
+  TH1F* numberofGoodEvtFreq_;
 
   TH2F* allFedsE2vsE1Hist_;
   TH2F* allFedsE9vsE1Hist_;
@@ -105,6 +107,7 @@ class EcalSuperURecHitHists : public edm::EDAnalyzer {
   TH2F* allOccupancyCoarse_; //New file to do eta-phi occupancy
   TH2F* allFedsTimingVsFreqHist_;
   TH2F* allFedsTimingVsAmpHist_;
+
 
   TFile* file;
   EcalFedMap* fedMap_;
