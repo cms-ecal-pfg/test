@@ -40,9 +40,9 @@ EcalSuperURecHitHists::EcalSuperURecHitHists(const edm::ParameterSet& iConfig) :
   histRangeMin_ (iConfig.getUntrackedParameter<double>("histogramMinRange",-10.0)),
   minSeedAmp_ (iConfig.getUntrackedParameter<double>("MinSeedAmp",8.0)),
   fileName_ (iConfig.getUntrackedParameter<std::string>("fileName", std::string("ecalURechHitHists"))),
-  thresholdCosmic_ (iConfig.getUntrackedParameter<double>("amplitudeThresholdCosmic", 12.0)),
-  thresholdNeighborCosmic_ (iConfig.getUntrackedParameter<double>("amplitudeThresholdNeighborCosmic", 12.0)),
-  thresholdSingleCosmic_ (iConfig.getUntrackedParameter<double>("amplitudeThresholdSingleCosmic", 20.0)) 
+  minCosmicE1_ (iConfig.getUntrackedParameter<double>("MinCosmicE1", 10.0)),
+  minCosmicE2_ (iConfig.getUntrackedParameter<double>("MinCosmicE2", 12.0)),
+  minCosmicE9_ (iConfig.getUntrackedParameter<double>("MinCosmicE9", 12.0))
 {
   naiveEvtNum_ = 0;
   cosmicCounter_ = 0;
@@ -100,7 +100,6 @@ EcalSuperURecHitHists::analyze(const edm::Event& iEvent, const edm::EventSetup& 
   Handle<EcalUncalibratedRecHitCollection> hits;
   
   naiveEvtNum_++;
-  bool hasGoodCosmic_ = false;   // to count cosmic events
     
   if(runNum_==-1)
     {
@@ -199,17 +198,28 @@ EcalSuperURecHitHists::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     if (secondMin > ampli) std::swap(ampli,secondMin);
 
     float E2 = ampli + secondMin;
-    float E8 = E9-ampli;
-    float E2mE1 = secondMin;
+    //    float E8 = E9-ampli;
+    //    float E2mE1 = secondMin;
      
-    if ((ampli < 10.) && (E2 <12.) && (E9 < 12.)) continue;
+    if ((ampli < minCosmicE1_) && (E2 < minCosmicE2_) && (E9 < minCosmicE9_)) continue;
     numberOfCosmics++;
-	       
+
+    
     //Set some more values
  
     float jitter = hit.jitter()+1.;
     int ieta = ebDet.ieta();
     int iphi = ebDet.iphi();
+
+    int ietaSM = ebDet.ietaSM();
+    int iphiSM = ebDet.iphiSM();
+
+    // print out some info
+    LogWarning("EcalSuperURecHitHists") << "hit! " << " amp " << ampli  << " : " 
+					<< fedMap_->getSliceFromFed(FEDid) 
+					<< " : ic " <<  ic << " : hashedIndex " << hashedIndex 
+					<< " : ieta " << ieta << " iphi " << iphi 
+					<< " : nCosmics " << " " << cosmicCounter_ << " / " << naiveEvtNum_ << endl;      
     
     // fill the proper hist
     TH1F* uRecHist = FEDsAndHists_[FEDid];
@@ -224,15 +234,8 @@ EcalSuperURecHitHists::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     TH2F* E2vsE1uRecHist = FEDsAndE2vsE1Hists_[FEDid];
     TH2F* E9vsE1uRecHist = FEDsAndE9vsE1Hists_[FEDid];
     TH1F* numXtalInE9Hist = FEDsAndNumXtalsInE9Hists_[FEDid];    
-
     TH2F* occupHist = FEDsAndOccupancyHists_[FEDid];
-    TH2F* ampVsEtaHist = FEDsAndAmplitudeVsEtaHists_[FEDid];
-    TH2F* ampVsPhiHist = FEDsAndAmplitudeVsPhiHists_[FEDid];
-
-    TH2F* cosmicOccupHist = cosmicFEDsAndOccupancyHists_[FEDid];
-    TH2F* cosmicAmpVsEtaHist = cosmicFEDsAndAmplitudeVsEtaHists_[FEDid];
-    TH2F* cosmicAmpVsPhiHist = cosmicFEDsAndAmplitudeVsPhiHists_[FEDid];
-    TH1F* cosmicTimingHist = cosmicFEDsAndTimingHists_[FEDid];
+    TH2F* timingHistVsPhi = FEDsAndTimingVsPhiHists_[FEDid];
 
     if(uRecHist==0)
       {
@@ -249,16 +252,8 @@ EcalSuperURecHitHists::analyze(const edm::Event& iEvent, const edm::EventSetup& 
 	E2vsE1uRecHist = FEDsAndE2vsE1Hists_[FEDid];
 	E9vsE1uRecHist = FEDsAndE9vsE1Hists_[FEDid];
 	numXtalInE9Hist = FEDsAndNumXtalsInE9Hists_[FEDid];
-
 	occupHist = FEDsAndOccupancyHists_[FEDid];
-	ampVsEtaHist = FEDsAndAmplitudeVsEtaHists_[FEDid];
-	ampVsPhiHist = FEDsAndAmplitudeVsPhiHists_[FEDid];    
-
-	cosmicOccupHist = cosmicFEDsAndOccupancyHists_[FEDid];
-	cosmicAmpVsEtaHist = cosmicFEDsAndAmplitudeVsEtaHists_[FEDid];
-	cosmicAmpVsPhiHist = cosmicFEDsAndAmplitudeVsPhiHists_[FEDid];
-	cosmicTimingHist = cosmicFEDsAndTimingHists_[FEDid];
-
+	timingHistVsPhi = FEDsAndTimingVsPhiHists_[FEDid];
       }
     
     uRecHist->Fill(ampli);
@@ -287,70 +282,18 @@ EcalSuperURecHitHists::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     allOccupancyCoarse_->Fill(iphi, ieta);
     allFedsNumXtalsInE9Hist_->Fill(numXtalsinE9);
     numXtalInE9Hist->Fill(numXtalsinE9);
+    timingHistVsPhi->Fill(jitter, iphiSM);
 
-    allFedsE1vsE8Hist_->Fill(ampli,E8);
-    allFedsE1vsE2mE1Hist_->Fill(ampli,E2mE1);	    
+    allFedsTimingPhiHist_->Fill(iphi,jitter);
+    if (FEDid>=610&&FEDid<=627)  allFedsTimingPhiEbmHist_->Fill(iphi,jitter);
+    if (FEDid>=628&&FEDid<=645)  allFedsTimingPhiEbpHist_->Fill(iphi,jitter);
+    occupHist->Fill(ietaSM,iphiSM);
 
-    allFedsTimingPhiHist_->Fill(ebDet.iphi()-11,hit.jitter());
-    if (FEDid>=610&&FEDid<=627)  allFedsTimingPhiEbmHist_->Fill(ebDet.iphi()-11,hit.jitter());
-    if (FEDid>=628&&FEDid<=645)  allFedsTimingPhiEbpHist_->Fill(ebDet.iphi()-11,hit.jitter());
-    occupHist->Fill(iphi,ieta);
-    ampVsEtaHist->Fill(ieta,ampli);
-    ampVsPhiHist->Fill(iphi,ampli);
-
-    // histograms for cosmic events
-    if( ampli > thresholdCosmic_)
-      {	
-	bool hasGoodNeighbor = false;
-	vector<DetId> neighbors = caloTopo->getWindow(ebDet,3,3);
-	for(vector<DetId>::const_iterator itr = neighbors.begin(); itr != neighbors.end(); ++itr)
-	  {
-	    vector<EcalUncalibratedRecHit>::const_iterator recItr;
-	    recItr = hits->find(*itr);
-	    if(recItr==hits->end()) continue;
-	    if(recItr->amplitude() > thresholdNeighborCosmic_ && ebDet != *itr) hasGoodNeighbor = true;	             
-	  }
-	// if amplitude is above thresholdSingle then no need to check neighbors
-	if (ampli < thresholdSingleCosmic_) {
-	  if(!hasGoodNeighbor)
-	    continue;
-	}
-	
-	hasGoodCosmic_ = true;
-	cout << endl;
-	LogWarning("EcalSuperURecHitHists") << "hit! " << " amp " << ampli  << " : " 
-					    << fedMap_->getSliceFromFed(FEDid) << " : ic " <<  ic << " : hashedIndex " << hashedIndex 
-					    << " : ieta " << ieta << " iphi " << iphi 
-					    << " : nCosmics " << " " << cosmicCounter_ << " / " << naiveEvtNum_ << endl;      
-	
-	cosmicOccupancyHist_->Fill(iphi,ieta);
-	cosmicAmplitudeHist_->Fill(iphi,ieta,ampli);
-	
-	cosmicOccupancyTTHist_->Fill(iphi,ieta);
-	cosmicAmplitudeTTHist_->Fill(iphi,ieta,ampli);
-	
-	cosmicAmplitudeEtaHist_->Fill(ieta,ampli);
-	cosmicAmplitudeEtaTTHist_->Fill(ieta,ampli);
-	
-	cosmicAmplitudePhiHist_->Fill(iphi,ampli);
-	cosmicAmplitudePhiTTHist_->Fill(iphi,ampli);
-	
-	allFedsTimingHistCosmic_->Fill(jitter);
-	allFedsTimingPhiHistCosmic_->Fill(iphi,jitter);
-	if (FEDid>=610&&FEDid<=627)  allFedsTimingPhiEbmHistCosmic_->Fill(iphi,jitter);
-	if (FEDid>=628&&FEDid<=645)  allFedsTimingPhiEbpHistCosmic_->Fill(iphi,jitter);
-
-	cosmicOccupHist->Fill(ebDet.ietaSM(),ebDet.iphiSM());//iphi,ieta);
-	cosmicAmpVsEtaHist->Fill(ebDet.ietaSM(),ampli);//ieta,ampli);
-	cosmicAmpVsPhiHist->Fill(ebDet.iphiSM(),ampli);//iphi,ampli);
-	cosmicTimingHist->Fill(jitter);
-
-      }
   }
+  
   numberofCosmicsHist_->Fill(numberOfCosmics);
   if (numberOfCosmics > 0 ) numberofGoodEvtFreq_->Fill(eventnum);
-  if (hasGoodCosmic_) cosmicCounter_++;
-
+  if ( numberOfCosmics > 0 ) cosmicCounter_++;
   
 }
 
@@ -398,7 +341,7 @@ void EcalSuperURecHitHists::initHists(int FED)
   FEDsAndFrequencyHists_[FED] = freqHist;
   FEDsAndFrequencyHists_[FED]->SetDirectory(0);
   
-  TH1F* iphiProfileHist = new TH1F(Form("iPhi_Profile_FED_%d",FED),Form("iPhi Profile for FED %d",FED),360,0.,360);
+  TH1F* iphiProfileHist = new TH1F(Form("iPhi_Profile_FED_%d",FED),Form("iPhi Profile for FED %d",FED),360,1.,361);
   FEDsAndiPhiProfileHists_[FED] = iphiProfileHist;
   FEDsAndiPhiProfileHists_[FED]->SetDirectory(0);
   
@@ -418,37 +361,14 @@ void EcalSuperURecHitHists::initHists(int FED)
   FEDsAndNumXtalsInE9Hists_[FED] = numXtalInE9Hist;
   FEDsAndNumXtalsInE9Hists_[FED]->SetDirectory(0);
 
-
-  TH2F* OccupHist = new TH2F(Form("occupFED_%d",FED),Form("Occupancy FED %d",FED),85,1,86,20,1,21);//360,0,360,172,-86,86);
+  TH2F* OccupHist = new TH2F(Form("occupFED_%d",FED),Form("Occupancy FED %d",FED),85,1,86,20,1,21);
   FEDsAndOccupancyHists_[FED] = OccupHist;
   FEDsAndOccupancyHists_[FED]->SetDirectory(0);
 
-  TH2F* AmpVsPhiHist = new TH2F(Form("ampPhiFED_%d",FED),Form("Amplitude vs Phi FED %d",FED),100,0,100,20,1,21);//360,0,360,100,0,100);
-  FEDsAndAmplitudeVsPhiHists_[FED] = AmpVsPhiHist;
-  FEDsAndAmplitudeVsPhiHists_[FED]->SetDirectory(0);
+  TH2F* timingHistVsPhi = new TH2F(Form("JitterVsPhiFED_%d",FED),Form("Jitter Vs Phi FED %d",FED),78,-7,7,20,1,21);
 
-  TH2F* AmpVsEtaHist = new TH2F(Form("ampEtaFED_%d",FED),Form("Amplitude vs Eta FED %d",FED),100,0,100,85,1,86);//172,-86,86,100,0,100);
-  FEDsAndAmplitudeVsEtaHists_[FED] = AmpVsEtaHist;
-  FEDsAndAmplitudeVsEtaHists_[FED]->SetDirectory(0);  
-
-
-  TH2F* cosmicOccupHist = new TH2F(Form("cosmicOccupFED_%d",FED),Form("Cosmic Occupancy FED %d",FED),85,1,86,20,1,21);//360,0,360,172,-86,86);
-  cosmicFEDsAndOccupancyHists_[FED] = cosmicOccupHist;
-  cosmicFEDsAndOccupancyHists_[FED]->SetDirectory(0);
-
-  TH2F* cosmicAmpVsPhiHist = new TH2F(Form("cosmicAmpPhiFED_%d",FED),Form("Cosmic Amplitude vs Phi FED %d",FED),100,0,100,20,1,21);//360,0,360,100,0,100);
-  cosmicFEDsAndAmplitudeVsPhiHists_[FED] = cosmicAmpVsPhiHist;
-  cosmicFEDsAndAmplitudeVsPhiHists_[FED]->SetDirectory(0);
-
-  TH2F* cosmicAmpVsEtaHist = new TH2F(Form("cosmicAmpEtaFED_%d",FED),Form("Cosmic Amplitude vs Eta FED %d",FED),100,0,100,85,1,86);//172,-86,86,100,0,100);
-  cosmicFEDsAndAmplitudeVsEtaHists_[FED] = cosmicAmpVsEtaHist;
-  cosmicFEDsAndAmplitudeVsEtaHists_[FED]->SetDirectory(0);  
-
-  TH1F* cosmicTimingHist = new TH1F(Form("cosmicJitterFED_%d",FED),Form("Cosmic Jitter for FED %d",FED),78,-7,7);
-  cosmicFEDsAndTimingHists_[FED] = cosmicTimingHist;
-  cosmicFEDsAndTimingHists_[FED]->SetDirectory(0);
-
-
+  FEDsAndTimingVsPhiHists_[FED] = timingHistVsPhi;
+  FEDsAndTimingVsPhiHists_[FED]->SetDirectory(0);
 
 }
 
@@ -466,32 +386,15 @@ EcalSuperURecHitHists::beginJob(const edm::EventSetup&)
   allFedsTimingVsFreqHist_ = new TH2F("JitterVsFreqAllEvent","Jitter Vs Freq All events;Jitter (MaxSample - 5);Event Number",78,-7,7,2000,0.,200000);
   allFedsTimingVsAmpHist_  = new TH2F("JitterVsAmpAllEvents","Jitter Vs Amp All Events;Jitter (MaxSample - 5);Amplitude",78,-7,7,numBins,histRangeMin_,histRangeMax_);
   allFedsFrequencyHist_    = new TH1F("FrequencyAllEvent","Frequency for All events",2000,0.,200000);
-  allFedsiPhiProfileHist_  = new TH1F("iPhiProfileAllEvents","iPhi Profile all events;i#phi",360,0.,360.);
+  allFedsiPhiProfileHist_  = new TH1F("iPhiProfileAllEvents","iPhi Profile all events;i#phi",360,1.,361.);
   allFedsiEtaProfileHist_  = new TH1F("iEtaProfileAllEvents","iEta Profile all events;i#eta",172,-86,86);
   allOccupancy_            = new TH2F("OccupancyAllEvents","Occupancy all events;i#phi;i#eta",360,1.,361.,172,-86,86);
   allOccupancyCoarse_      = new TH2F("OccupancyAllEventsCoarse","Occupancy all events Coarse;i#phi;i#eta",360/5,1,361.,172/5,-86,86);
   allFedsNumXtalsInE9Hist_ = new TH1F("NumXtalsInE9AllHist","Number of active Xtals in E9;NumXtals",10,0,10);
 
-  cosmicOccupancyHist_           = new TH2F("cosmicOccupancy","Cosmic Occupancy (xtal binning;i#phi;i#eta",360,1,361,172,-86,86);
-  cosmicOccupancyTTHist_         = new TH2F("cosmicOccupancyTT","Cosmic Occupancy (TT binning);i#phi;i#eta",72,1,361,34,-86,86);
-  cosmicAmplitudeHist_           = new TH2F("cosmicAmplitude","Cosmic Amplitude (xtal binning)",360,1,361,172,-86,86);
-  cosmicAmplitudeTTHist_         = new TH2F("cosmicAmplitudeTT","Cosmic Amplitude (TT binning)",72,1,361,34,-86,86);
-  cosmicAmplitudeEtaHist_        = new TH2F("cosmicAmplitudeEta","Cosmic Eta Amplitude (xtal binning)",172,-86,86,100,0,100);
-  cosmicAmplitudeEtaTTHist_      = new TH2F("cosmicAmplitudeEtaTT","Cosmic Eta Amplitude (TT binning)",34,-86,86,100,0,100);
-  cosmicAmplitudePhiHist_        = new TH2F("cosmicAmplitudePhi","Cosmic Phi Amplitude (xtal binning)",360,1,361,100,0,100);
-  cosmicAmplitudePhiTTHist_      = new TH2F("cosmicAmplitudePhiTT","Cosmic Phi Amplitude (TT binning)",360,1,361,100,0,100);
-
-  allFedsE1vsE8Hist_             = new TH2F("allFedsE1vsE8Hist","E1vE8_AllURecHits;E_1(ADC);E_8=E_9-E_1(ADC)",numBins,histRangeMin_,histRangeMax_,numBins,histRangeMin_,histRangeMax_);
-  allFedsE1vsE2mE1Hist_          = new TH2F("allFedsE1vsE2mE1Hist","E1vsE2-E1_AllURecHits;E_1(ADC);E_2-E_1(ADC)",numBins,histRangeMin_,histRangeMax_,numBins,histRangeMin_,histRangeMax_);
-
   allFedsTimingPhiHist_          = new TH2F("JitterPhiAllFEDs","Jitter vs Phi for all FEDs (TT binning)",72,1,361,78,-7,7);
-  allFedsTimingHistCosmic_       = new TH1F("cosmicJitterAllFEDs","Cosmic Jitter for all FEDs;jitter (MaxSample -5)",78,-7,7);  
-  allFedsTimingPhiHistCosmic_    = new TH2F("cosmicJitterPhiAllFEDs","Cosmic Jitter Phi for all FEDs (TT binning);i#phi;jitter (MaxSample -5)",72,1,361,78,-7,7);
   allFedsTimingPhiEbpHist_       = new TH2F("JitterPhiEBP","Jitter vs Phi for FEDs in EB+ (TT binning) ;i#phi;jitter (MaxSample -5)",72,1,361,78,-7,7);
-  allFedsTimingPhiEbpHistCosmic_ = new TH2F("cosmicJitterPhiEBP","Cosmic Jitter Phi for FEDs in EB+ (TT binning);i#phi;jitter (MaxSample -5)",72,1,361,78,-7,7);
   allFedsTimingPhiEbmHist_       = new TH2F("JitterPhiEBM","Jitter vs Phi for FEDs in EB- (TT binning);i#phi;jitter (MaxSample -5)",72,1,361,78,-7,7);
-  allFedsTimingPhiEbmHistCosmic_ = new TH2F("cosmicJitterPhiEBM","Cosmic Jitter Phi for FEDs in EB- (TT binning);i#phi;jitter (MaxSample -5)",72,1,361,78,-7,7);
-
   
   numberofCosmicsHist_ = new TH1F("numberofCosmicsPerEvent","Number of cosmics per event;Number of Cosmics",10,0,10);
   numberofGoodEvtFreq_  = new TH1F("frequencyOfGoodEvents","Number of events with cosmic vs Event;Event Number;Number of Good Events/100 Events",2000,0,200000);
@@ -561,20 +464,9 @@ EcalSuperURecHitHists::endJob()
 
 	hist2 = FEDsAndOccupancyHists_[itr->first];
 	hist2->Write();
-	hist2 = FEDsAndAmplitudeVsEtaHists_[itr->first];
-	hist2->Write();
-	hist2 = FEDsAndAmplitudeVsPhiHists_[itr->first];
-	hist2->Write();
 
-	hist2 = cosmicFEDsAndOccupancyHists_[itr->first];
+	hist2 = FEDsAndTimingVsPhiHists_[itr->first];
 	hist2->Write();
-	hist2 = cosmicFEDsAndAmplitudeVsEtaHists_[itr->first];
-	hist2->Write();
-	hist2 = cosmicFEDsAndAmplitudeVsPhiHists_[itr->first];
-	hist2->Write();
-
-	hist = cosmicFEDsAndTimingHists_[itr->first];
-	hist->Write();
 
     root_file_.cd();
   }
@@ -592,23 +484,9 @@ EcalSuperURecHitHists::endJob()
   allOccupancy_->Write();
   allOccupancyCoarse_->Write();
   allFedsNumXtalsInE9Hist_->Write();
-  cosmicOccupancyHist_->Write();
-  cosmicOccupancyTTHist_->Write(); 
-  cosmicAmplitudeHist_->Write();
-  cosmicAmplitudeTTHist_->Write();
-  cosmicAmplitudeEtaHist_->Write();
-  cosmicAmplitudeEtaTTHist_->Write();
-  cosmicAmplitudePhiHist_->Write();
-  cosmicAmplitudePhiTTHist_->Write();
-  allFedsE1vsE8Hist_->Write();
-  allFedsE1vsE2mE1Hist_->Write();
   allFedsTimingPhiHist_->Write();
-  allFedsTimingHistCosmic_->Write();
-  allFedsTimingPhiHistCosmic_->Write();
   allFedsTimingPhiEbpHist_->Write();
-  allFedsTimingPhiEbpHistCosmic_->Write();
   allFedsTimingPhiEbmHist_->Write();
-  allFedsTimingPhiEbmHistCosmic_->Write();
 
   numberofCosmicsHist_->Write();
   numberofGoodEvtFreq_->Write();
