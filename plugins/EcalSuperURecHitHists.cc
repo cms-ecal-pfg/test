@@ -365,15 +365,15 @@ void EcalSuperURecHitHists::initHists(int FED)
   FEDsAndNumXtalsInE9Hists_[FED] = numXtalInE9Hist;
   FEDsAndNumXtalsInE9Hists_[FED]->SetDirectory(0);
 
-  TH2F* OccupHist = new TH2F(Form("occupFED_%d",FED),Form("Occupancy FED %d",FED),85,1,86,20,1,21);
+  TH2F* OccupHist = new TH2F(Form("occupFED_%d",FED),Form("Occupancy FED %d;i#eta;i#phi",FED),85,1,86,20,1,21);
   FEDsAndOccupancyHists_[FED] = OccupHist;
   FEDsAndOccupancyHists_[FED]->SetDirectory(0);
 
-  TH2F* timingHistVsPhi = new TH2F(Form("JitterVsPhiFED_%d",FED),Form("Jitter Vs Phi FED %d",FED),78,-7,7,20,1,21);
+  TH2F* timingHistVsPhi = new TH2F(Form("JitterVsPhiFED_%d",FED),Form("Jitter Vs Phi FED %d;Jitter (MaxSample - 5);i#phi",FED),78,-7,7,20,1,21);
   FEDsAndTimingVsPhiHists_[FED] = timingHistVsPhi;
   FEDsAndTimingVsPhiHists_[FED]->SetDirectory(0);
 
-  TH2F* timingHistVsModule = new TH2F(Form("JitterVsModuleFED_%d",FED),Form("Jitter Vs Module FED %d",FED),78,-7,7,4,1,86);
+  TH2F* timingHistVsModule = new TH2F(Form("JitterVsModuleFED_%d",FED),Form("Jitter Vs Module FED %d;Jitter (MaxSample - 5);i#eta",FED),78,-7,7,4,1,86);
   FEDsAndTimingVsModuleHists_[FED] = timingHistVsModule;
   FEDsAndTimingVsModuleHists_[FED]->SetDirectory(0);
 
@@ -399,10 +399,10 @@ EcalSuperURecHitHists::beginJob(const edm::EventSetup&)
   allOccupancyCoarse_      = new TH2F("OccupancyAllEventsCoarse","Occupancy all events Coarse;i#phi;i#eta",360/5,1,361.,172/5,-86,86);
   allFedsNumXtalsInE9Hist_ = new TH1F("NumXtalsInE9AllHist","Number of active Xtals in E9;NumXtals",10,0,10);
 
-  allFedsTimingPhiHist_          = new TH2F("JitterPhiAllFEDs","Jitter vs Phi for all FEDs (TT binning)",72,1,361,78,-7,7);
-  allFedsTimingPhiEbpHist_       = new TH2F("JitterPhiEBP","Jitter vs Phi for FEDs in EB+ (TT binning) ;i#phi;jitter (MaxSample -5)",72,1,361,78,-7,7);
-  allFedsTimingPhiEbmHist_       = new TH2F("JitterPhiEBM","Jitter vs Phi for FEDs in EB- (TT binning);i#phi;jitter (MaxSample -5)",72,1,361,78,-7,7);
-  allFedsTimingPhiEtaHist_       = new TH3F("JitterPhiEtaAllFEDs","(Phi,Eta,Jitter) for all FEDs (SM,M binning)",18,1,361,8,-86,86,78,-7,7);  
+  allFedsTimingPhiHist_          = new TH2F("JitterPhiAllFEDs","Jitter vs Phi for all FEDs (TT binning);i#phi;jitter (MaxSample - 5)",72,1,361,78,-7,7);
+  allFedsTimingPhiEbpHist_       = new TH2F("JitterPhiEBP","Jitter vs Phi for FEDs in EB+ (TT binning) ;i#phi;jitter (MaxSample - 5)",72,1,361,78,-7,7);
+  allFedsTimingPhiEbmHist_       = new TH2F("JitterPhiEBM","Jitter vs Phi for FEDs in EB- (TT binning);i#phi;jitter (MaxSample - 5)",72,1,361,78,-7,7);
+  allFedsTimingPhiEtaHist_       = new TH3F("JitterPhiEtaAllFEDs","(Phi,Eta,Jitter) for all FEDs (SM,M binning);i#phi;i#eta;jitter (MaxSample - 5)",18,1,361,8,-86,86,78,-7,7);  
 
   numberofCosmicsHist_ = new TH1F("numberofCosmicsPerEvent","Number of cosmics per event;Number of Cosmics",10,0,10);
   numberofGoodEvtFreq_  = new TH1F("frequencyOfGoodEvents","Number of events with cosmic vs Event;Event Number;Number of Good Events/100 Events",2000,0,200000);
