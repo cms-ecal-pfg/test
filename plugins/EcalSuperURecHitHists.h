@@ -45,6 +45,7 @@
 #include "TFile.h"
 #include "TH1F.h"
 #include "TH2F.h"
+#include "TH3F.h"
 #include "TGraph.h"
 #include "TNtuple.h"
 
@@ -91,6 +92,7 @@ class EcalSuperURecHitHists : public edm::EDAnalyzer {
   std::map<int,TH2F*> FEDsAndE9vsE1Hists_;
   std::map<int,TH2F*> FEDsAndOccupancyHists_;  
   std::map<int,TH2F*> FEDsAndTimingVsPhiHists_;  
+  std::map<int,TH2F*> FEDsAndTimingVsModuleHists_;  
 
   TH1F* allFedsHist_;
   TH1F* allFedsE2Hist_;
@@ -109,10 +111,11 @@ class EcalSuperURecHitHists : public edm::EDAnalyzer {
   TH2F* allOccupancyCoarse_; //New file to do eta-phi occupancy
   TH2F* allFedsTimingVsFreqHist_;
   TH2F* allFedsTimingVsAmpHist_;
-
   TH2F* allFedsTimingPhiHist_;
   TH2F* allFedsTimingPhiEbpHist_;
   TH2F* allFedsTimingPhiEbmHist_;
+  TH3F* allFedsTimingPhiEtaHist_;
+
 
   TFile* file;
   EcalFedMap* fedMap_;

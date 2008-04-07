@@ -236,6 +236,7 @@ EcalSuperURecHitHists::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     TH1F* numXtalInE9Hist = FEDsAndNumXtalsInE9Hists_[FEDid];    
     TH2F* occupHist = FEDsAndOccupancyHists_[FEDid];
     TH2F* timingHistVsPhi = FEDsAndTimingVsPhiHists_[FEDid];
+    TH2F* timingHistVsModule = FEDsAndTimingVsModuleHists_[FEDid];
 
     if(uRecHist==0)
       {
@@ -254,6 +255,7 @@ EcalSuperURecHitHists::analyze(const edm::Event& iEvent, const edm::EventSetup& 
 	numXtalInE9Hist = FEDsAndNumXtalsInE9Hists_[FEDid];
 	occupHist = FEDsAndOccupancyHists_[FEDid];
 	timingHistVsPhi = FEDsAndTimingVsPhiHists_[FEDid];
+	timingHistVsModule = FEDsAndTimingVsModuleHists_[FEDid];
       }
     
     uRecHist->Fill(ampli);
@@ -283,8 +285,10 @@ EcalSuperURecHitHists::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     allFedsNumXtalsInE9Hist_->Fill(numXtalsinE9);
     numXtalInE9Hist->Fill(numXtalsinE9);
     timingHistVsPhi->Fill(jitter, iphiSM);
+    timingHistVsModule->Fill(jitter, ietaSM);
 
     allFedsTimingPhiHist_->Fill(iphi,jitter);
+    allFedsTimingPhiEtaHist_->Fill(iphi,ieta,jitter);
     if (FEDid>=610&&FEDid<=627)  allFedsTimingPhiEbmHist_->Fill(iphi,jitter);
     if (FEDid>=628&&FEDid<=645)  allFedsTimingPhiEbpHist_->Fill(iphi,jitter);
     occupHist->Fill(ietaSM,iphiSM);
@@ -366,9 +370,12 @@ void EcalSuperURecHitHists::initHists(int FED)
   FEDsAndOccupancyHists_[FED]->SetDirectory(0);
 
   TH2F* timingHistVsPhi = new TH2F(Form("JitterVsPhiFED_%d",FED),Form("Jitter Vs Phi FED %d",FED),78,-7,7,20,1,21);
-
   FEDsAndTimingVsPhiHists_[FED] = timingHistVsPhi;
   FEDsAndTimingVsPhiHists_[FED]->SetDirectory(0);
+
+  TH2F* timingHistVsModule = new TH2F(Form("JitterVsModuleFED_%d",FED),Form("Jitter Vs Module FED %d",FED),78,-7,7,4,1,86);
+  FEDsAndTimingVsModuleHists_[FED] = timingHistVsModule;
+  FEDsAndTimingVsModuleHists_[FED]->SetDirectory(0);
 
 }
 
@@ -395,7 +402,8 @@ EcalSuperURecHitHists::beginJob(const edm::EventSetup&)
   allFedsTimingPhiHist_          = new TH2F("JitterPhiAllFEDs","Jitter vs Phi for all FEDs (TT binning)",72,1,361,78,-7,7);
   allFedsTimingPhiEbpHist_       = new TH2F("JitterPhiEBP","Jitter vs Phi for FEDs in EB+ (TT binning) ;i#phi;jitter (MaxSample -5)",72,1,361,78,-7,7);
   allFedsTimingPhiEbmHist_       = new TH2F("JitterPhiEBM","Jitter vs Phi for FEDs in EB- (TT binning);i#phi;jitter (MaxSample -5)",72,1,361,78,-7,7);
-  
+  allFedsTimingPhiEtaHist_       = new TH3F("JitterPhiEtaAllFEDs","(Phi,Eta,Jitter) for all FEDs (SM,M binning)",18,1,361,8,-86,86,78,-7,7);  
+
   numberofCosmicsHist_ = new TH1F("numberofCosmicsPerEvent","Number of cosmics per event;Number of Cosmics",10,0,10);
   numberofGoodEvtFreq_  = new TH1F("frequencyOfGoodEvents","Number of events with cosmic vs Event;Event Number;Number of Good Events/100 Events",2000,0,200000);
   }
@@ -468,6 +476,9 @@ EcalSuperURecHitHists::endJob()
 	hist2 = FEDsAndTimingVsPhiHists_[itr->first];
 	hist2->Write();
 
+	hist2 = FEDsAndTimingVsModuleHists_[itr->first];
+	hist2->Write();
+
     root_file_.cd();
   }
   allFedsHist_->Write();
@@ -487,6 +498,7 @@ EcalSuperURecHitHists::endJob()
   allFedsTimingPhiHist_->Write();
   allFedsTimingPhiEbpHist_->Write();
   allFedsTimingPhiEbmHist_->Write();
+  allFedsTimingPhiEtaHist_->Write();
 
   numberofCosmicsHist_->Write();
   numberofGoodEvtFreq_->Write();
