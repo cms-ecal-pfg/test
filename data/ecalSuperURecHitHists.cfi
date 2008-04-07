@@ -22,4 +22,13 @@ module ecalSuperURecHitHists = EcalSuperURecHitHists{
       # parameter for the name of the output root file with TH1F
       untracked string fileName = 'ecalSuperURecHitHists'
 
+      # parameter to specify minimum seed amplitude (ADC)
+      untracked double MinSeedAmp = 8.0
+
+      # parameters to specify cosmics selection; algorithm rejects cosmics if:
+      # (ampli < MinCosmicE1) && (E2 < MinCosmicE2) && (E9 < MinCosmicE9)
+      untracked double MinCosmicE1 = 10.0
+      untracked double MinCosmicE2 = 12.0
+      untracked double MinCosmicE9 = 12.0
+	
 }
