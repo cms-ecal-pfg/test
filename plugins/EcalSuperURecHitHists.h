@@ -122,8 +122,7 @@ class EcalSuperURecHitHists : public edm::EDAnalyzer {
 
   double minCosmicE1_;
   double minCosmicE2_;
-  double minCosmicE9_;
-
+  
   int naiveEvtNum_; 
   int cosmicCounter_;
 };

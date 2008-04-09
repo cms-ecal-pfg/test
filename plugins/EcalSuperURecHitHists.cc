@@ -40,9 +40,8 @@ EcalSuperURecHitHists::EcalSuperURecHitHists(const edm::ParameterSet& iConfig) :
   histRangeMin_ (iConfig.getUntrackedParameter<double>("histogramMinRange",-10.0)),
   minSeedAmp_ (iConfig.getUntrackedParameter<double>("MinSeedAmp",8.0)),
   fileName_ (iConfig.getUntrackedParameter<std::string>("fileName", std::string("ecalURechHitHists"))),
-  minCosmicE1_ (iConfig.getUntrackedParameter<double>("MinCosmicE1", 10.0)),
-  minCosmicE2_ (iConfig.getUntrackedParameter<double>("MinCosmicE2", 12.0)),
-  minCosmicE9_ (iConfig.getUntrackedParameter<double>("MinCosmicE9", 12.0))
+  minCosmicE1_ (iConfig.getUntrackedParameter<double>("MinCosmicE1", 12.0)),
+  minCosmicE2_ (iConfig.getUntrackedParameter<double>("MinCosmicE2", 4.0))  
 {
   naiveEvtNum_ = 0;
   cosmicCounter_ = 0;
@@ -135,6 +134,7 @@ EcalSuperURecHitHists::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     EcalElectronicsId elecId = ecalElectronicsMap->getElectronicsId(ebDet);
     int FEDid = 600+elecId.dccId();
     float ampli = hit.amplitude();
+    float jitter = hit.jitter()+1.;
 
     if (ampli < minSeedAmp_ ) continue;
 
@@ -166,6 +166,7 @@ EcalSuperURecHitHists::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     //Get some neighbor information
     std::vector<DetId> neighbors = caloTopo->getWindow(ebDet,3,3);
     float secondMin = 0.;
+    float secondJit = 0.;
     float E9 = ampli;
     int numXtalsinE9 = 1;
     for(std::vector<DetId>::const_iterator detitr = neighbors.begin(); detitr != neighbors.end(); ++detitr)
@@ -187,27 +188,24 @@ EcalSuperURecHitHists::analyze(const edm::Event& iEvent, const edm::EventSetup& 
 	    if (find(usedChannels_.begin(), usedChannels_.end(), neighborHashedIndex)==usedChannels_.end())
 	      {
 		usedChannels_.push_back(neighborHashedIndex);
-		float thisamp = (*thishit).amplitude();
-		//if (thisamp > 3.0) E9+=thisamp; //To reduce noise maybe only include those above a certain amplitude
-		E9+=thisamp; //To reduce noise maybe only include those above a certain amplitude
-		if (thisamp > secondMin) secondMin = thisamp;
-		if (thisamp > 3.0) numXtalsinE9++;
+		float thisamp = myhit.amplitude();
+		if (thisamp > 3.0) {E9+=thisamp;numXtalsinE9++; }
+		if (thisamp > secondMin) {secondMin = thisamp; secondJit = myhit.jitter()+1.;}
 	      }
 	  }
      }
-    if (secondMin > ampli) std::swap(ampli,secondMin);
+    if (secondMin > ampli) {std::swap(ampli,secondMin); std::swap(jitter,secondJit);}
 
     float E2 = ampli + secondMin;
     //    float E8 = E9-ampli;
     //    float E2mE1 = secondMin;
      
-    if ((ampli < minCosmicE1_) && (E2 < minCosmicE2_) && (E9 < minCosmicE9_)) continue;
+    if ((ampli < minCosmicE1_) && (secondMin < minCosmicE2_)) continue; //Posibly add a third && (numXtalsinE9<3) TEST IT FIRST
     numberOfCosmics++;
 
     
     //Set some more values
  
-    float jitter = hit.jitter()+1.;
     int ieta = ebDet.ieta();
     int iphi = ebDet.iphi();
 
