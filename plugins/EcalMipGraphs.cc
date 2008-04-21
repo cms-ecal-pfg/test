@@ -41,9 +41,6 @@ EcalMipGraphs::EcalMipGraphs(const edm::ParameterSet& iConfig) :
   side_ (iConfig.getUntrackedParameter<int>("side", 3)),
   givenSeedCry_ (iConfig.getUntrackedParameter<int>("seedCry",0)),
   threshold_ (iConfig.getUntrackedParameter<double>("amplitudeThreshold", 12.0)),
-  thresholdNeighbor_ (iConfig.getUntrackedParameter<double>("amplitudeThresholdNeighbor", 12.0)),
-  thresholdSingle_ (iConfig.getUntrackedParameter<double>("amplitudeThresholdSingle", 20.0)), 
-  thresholdLoose_ (iConfig.getUntrackedParameter<double>("amplitudeThresholdLoose", 7.0)),
   fileName_ (iConfig.getUntrackedParameter<std::string>("fileName", std::string("ecalMipGraphs")))
 {
   vector<int> listDefaults;
@@ -58,44 +55,11 @@ EcalMipGraphs::EcalMipGraphs(const edm::ParameterSet& iConfig) :
   
   fedMap_ = new EcalFedMap();
 
-  // timing plots
   string title1 = "Jitter for all FEDs";
   string name1 = "JitterAllFEDs";
   allFedsTimingHist_ = new TH1F(name1.c_str(),title1.c_str(),14,-7,7);
-
-  title1 = "Jitter vs Phi for all FEDs (TT binning)";
-  name1 = "JitterPhiAllFEDs";
-  allFedsTimingPhiHist_ = new TH2F(name1.c_str(),title1.c_str(),72,-10,350,14,-7,7);
-
-  name1 = "cosmicJitterAllFEDs";
-  title1 = "Cosmic Jitter for all FEDs";
-  allFedsTimingHistCosmic_ = new TH1F(name1.c_str(),title1.c_str(),14,-7,7);
   
-  name1 = "cosmicJitterPhiAllFEDs";
-  title1 = "Cosmic Jitter Phi for all FEDs (TT binning)";
-  allFedsTimingPhiHistCosmic_ = new TH2F(name1.c_str(),title1.c_str(),72,-10,350,14,-7,7);
-
-  name1 = "JitterPhiEBP";
-  title1 = "Jitter vs Phi for FEDs in EB+ (TT binning)";
-  allFedsTimingPhiEbpHist_ = new TH2F(name1.c_str(),title1.c_str(),72,-10,350,14,-7,7);
-
-  name1 = "cosmicJitterPhiEBP";
-  title1 = "Cosmic Jitter Phi for FEDs in EB+ (TT binning)";
-  allFedsTimingPhiEbpHistCosmic_ = new TH2F(name1.c_str(),title1.c_str(),72,-10,350,14,-7,7);
-
-  name1 = "JitterPhiEBM";
-  title1 = "Jitter vs Phi for FEDs in EB- (TT binning)";
-  allFedsTimingPhiEbmHist_ = new TH2F(name1.c_str(),title1.c_str(),72,-10,350,14,-7,7);
-
-  name1 = "cosmicJitterPhiEBM";
-  title1 = "Cosmic Jitter Phi for FEDs in EB- (TT binning)";
-  allFedsTimingPhiEbmHistCosmic_ = new TH2F(name1.c_str(),title1.c_str(),72,-10,350,14,-7,7);
-
-  name1 = "amplitudeRecHits";
-  title1 = "Amplitude for all RecHits with ADC > 7";
-  recHitAmplitudeHist_ = new TH1F(name1.c_str(),title1.c_str(),200,0,200);
-  
- // load up the maskedFED list with the proper FEDids
+  // load up the maskedFED list with the proper FEDids
   if(maskedFEDs_[0]==-1)
   {
     //if "actual" EB id given, then convert to FEDid and put in listFEDs_
@@ -112,25 +76,7 @@ EcalMipGraphs::EcalMipGraphs(const edm::ParameterSet& iConfig) :
   for (int i=0; i<10; i++)        abscissa[i] = i;
   naiveEvtNum_ = 0;
 
-  cosmicCounter_ = 0;
-
-  barrelCosmicOccupancyHist_ = new TH2F("barrelCosmicOccupancy","Cosmic Occupancy (xtal binning)",5*72,-10,350,5*34,-86,86);
-  barrelCosmicOccupancyTTHist_ = new TH2F("barrelCosmicOccupancyTT","Cosmic Occupancy (TT binning)",72,-10,350,34,-86,86);
-
-  barrelCosmicAmplitudeHist_ = new TH2F("barrelCosmicAmplitude","Cosmic Amplitude (xtal binning)",5*72,-10,350,5*34,-86,86);
-  barrelCosmicAmplitudeTTHist_ = new TH2F("barrelCosmicAmplitudeTT","Cosmic Amplitude (TT binning)",72,-10,350,34,-86,86);
-
-  barrelCosmicAmplitudeEtaHist_ = new TH2F("barrelCosmicAmplitudeEta","Cosmic Eta Amplitude (xtal binning)",5*34,-86,86,100,0,100);
-  barrelCosmicAmplitudeEtaTTHist_ = new TH2F("barrelCosmicAmplitudeEtaTT","Cosmic Eta Amplitude (TT binning)",34,-86,86,100,0,100);
-
-  barrelCosmicAmplitudePhiHist_ = new TH2F("barrelCosmicAmplitudePhi","Cosmic Phi Amplitude (xtal binning)",5*72,-10,350,100,0,100);
-  barrelCosmicAmplitudePhiTTHist_ = new TH2F("barrelCosmicAmplitudePhiTT","Cosmic Phi Amplitude (TT binning)",5*72,-10,350,100,0,100);
-
-  barrelCosmicE1vE8_ = new TH2F("barrelCosmicE1vE8","Cosmic E1vE8",50,0,50,50,0,50);
-  barrelCosmicE1vE2_ = new TH2F("barrelCosmicE1vE2","Cosmic E1vE2",50,0,50,50,0,50);
-  barrelCosmicE1vE9_ = new TH2F("barrelCosmicE1vE9","Cosmic E1vE9",50,0,50,50,0,50);
-  barrelCosmicE1vE1E2_ = new TH2F("barrelCosmicE1vE1E2","Cosmic E1vE1E2",50,0,50,50,0,50);
-
+  barrelCosmicOccupancyTTHist_ = new TH2F("barrelCosmicOccupancyTT","Cosmic Occupancy (TT binning)",34,-86,86,72,-10,350);
 }
 
 
@@ -147,8 +93,6 @@ EcalMipGraphs::~EcalMipGraphs()
 void
 EcalMipGraphs::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-  // to count cosmic events
-  bool hasGoodCosmic_ = false;
 
   // get the headers
   // (one header for each supermodule)
@@ -174,7 +118,6 @@ EcalMipGraphs::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     fileName_+=intToString(runNum_);
     fileName_+=".graph.root";
     file_ = TFile::Open(fileName_.c_str(),"RECREATE");
-    TH1::AddDirectory(false);
     eventsAndSeedCrys_ = new TNtuple("eventsSeedCrys","Events and Seed Crys Mapping","LV1A:ic:fed");
   }
 
@@ -233,11 +176,6 @@ EcalMipGraphs::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     float ampli = hit.amplitude();
     float jitter = hit.jitter();
 
-    //// BE SURE TO REMOVE THIS!!!!!! TOYOKO
-    //    if (ampli < 40) continue;
-
-    if (ampli > 5) recHitAmplitudeHist_->Fill(ampli);
-
     vector<int>::iterator result;
     result = find(maskedFEDs_.begin(), maskedFEDs_.end(), FEDid);
     if(result != maskedFEDs_.end())
@@ -253,63 +191,6 @@ EcalMipGraphs::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       continue;
     } 
     
-
-    if(fedIds[FEDid-601]==0)
-      {
-	// occupancy plots by SM
-	string name = "cosmicOccup_"+intToString(FEDid);
-	string title = "Cosmic Occupancy for "+fedMap_->getSliceFromFed(FEDid);
-	fedIdOccupancyHistMap_[FEDid] = new TH2F(name.c_str(),title.c_str(),85,1,86,20,1,21);
-
-	name = "cosmicOccupEta_"+intToString(FEDid);
-	title = "Cosmic Occupancy Eta Profile for "+fedMap_->getSliceFromFed(FEDid);
-	fedIdOccupancyEtaHistMap_[FEDid] = new TH1F(name.c_str(),title.c_str(),85,1,86);
-
-	name = "cosmicOccupPhi_"+intToString(FEDid);
-	title = "Cosmic Occupancy Phi Profile for "+fedMap_->getSliceFromFed(FEDid);
-	fedIdOccupancyPhiHistMap_[FEDid] = new TH1F(name.c_str(),title.c_str(),20,1,21);
-	
-	// amplitude plots by SM
-	name = "cosmicAmpEta_"+intToString(FEDid);
-	title = "Cosmic Eta Amplitude for "+fedMap_->getSliceFromFed(FEDid);
-	fedIdAmplitudeEtaHistMap_[FEDid] = new TH2F(name.c_str(),title.c_str(),100,0,100,85,1,86);
-
-	name = "cosmicAmpPhi_"+intToString(FEDid);
-	title = "Cosmic Phi Amplitude for "+fedMap_->getSliceFromFed(FEDid);
-	fedIdAmplitudePhiHistMap_[FEDid] = new TH2F(name.c_str(),title.c_str(),100,0,100,20,1,21);
-
-	fedIds[FEDid-601]++;
-
-      }
-
-    // E1vE8 plotted using lower threshold
-    if( !givenSeedCry_ && ampli > thresholdLoose_ )
-      {
-	float E8 = 0.0;       
-	float E2 = -99999.;
-	
-	vector<DetId> neighbors = caloTopo->getWindow(ebDet,3,3);
-	
-	for(vector<DetId>::const_iterator itr = neighbors.begin(); itr != neighbors.end(); ++itr)
-	  {
-	    vector<EcalUncalibratedRecHit>::const_iterator recItr;
-	    recItr = hits->find(*itr);
-	    if(recItr==hits->end())
-	      continue;
-	    if (ebDet!= *itr) {
-	      E8 += recItr->amplitude();
-	      if (recItr->amplitude() > E2 ) E2 = recItr->amplitude();
-	      LogWarning("EcalMipGraphs") <<  intToString(naiveEvtNum_) 
-					  << " E1 " << ampli << " : E2 " << E2 << " : " << recItr->amplitude()<< " : E8 " << E8 << " : " << thresholdLoose_ << endl;
-	    }
-	  }
-	barrelCosmicE1vE8_->Fill(ampli,E8);
-	barrelCosmicE1vE2_->Fill(ampli,E2);	    
-	barrelCosmicE1vE9_->Fill(ampli,E8+ampli);
-	barrelCosmicE1vE1E2_->Fill(ampli,E2+ampli);	    
-      }
-    // end of E1 and E8
-    
     if(ampli > threshold_ && !givenSeedCry_)
     {
       // only produce output if no seed cry is given by user and amplitude makes cut
@@ -319,58 +200,24 @@ EcalMipGraphs::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     
     if(hashedIndex == givenSeedCry_ || (!givenSeedCry_ && ampli > threshold_))
     {
-      float E8 = 0.0;
       if(!givenSeedCry_)
-      {	
-	bool hasGoodNeighbor = false;
-	vector<DetId> neighbors = caloTopo->getWindow(ebDet,side_,side_); // what if side!=3 ?
-	for(vector<DetId>::const_iterator itr = neighbors.begin(); itr != neighbors.end(); ++itr)
-	  {
-	    vector<EcalUncalibratedRecHit>::const_iterator recItr;
-	    recItr = hits->find(*itr);
-	    if(recItr==hits->end())
-	      continue;
-	    if (ebDet!= *itr) E8 += recItr->amplitude();
-	    if(recItr->amplitude() > thresholdNeighbor_ && ebDet != *itr) {
-	      hasGoodNeighbor = true;	      
-	    }
-	  }	  
-	// if amplitude is above thresholdSingle then no need to check neighbors
-	if (ampli < thresholdSingle_) {
-	  if(!hasGoodNeighbor)
-	    continue;
-	}
-      }
+      {
+	  bool hasGoodNeighbor = false;
+          vector<DetId> neighbors = caloTopo->getWindow(ebDet,side_,side_);
+          for(vector<DetId>::const_iterator itr = neighbors.begin(); itr != neighbors.end(); ++itr)
+          {
+              vector<EcalUncalibratedRecHit>::const_iterator recItr;
+              recItr = hits->find(*itr);
+              if(recItr==hits->end())
+                  continue;
+              if(recItr->amplitude() > threshold_ && ebDet != *itr)
+                hasGoodNeighbor = true;
+          }
       
-      hasGoodCosmic_ = true;
-
-      cout << endl;
-      LogWarning("EcalMipGraphs") << "hit! " << intToString(naiveEvtNum_) << " amp " << ampli << " : E8 " << E8 << " : " << fedMap_->getSliceFromFed(FEDid) << " : ic " <<  ebDet.ic() << " : ieta " << ebDet.ieta() << " iphi " << ebDet.iphi() << " : ietaSM " << ebDet.ietaSM() << " iphiSM " << ebDet.iphiSM() << " : hashedIndex " << ebDet.hashedIndex() << " : nCosmics " << hasGoodCosmic_ << " " << cosmicCounter_ << endl;      
-
-      fedIdOccupancyHistMap_[FEDid]->Fill(ebDet.ietaSM(),ebDet.iphiSM());
-      fedIdOccupancyEtaHistMap_[FEDid]->Fill(ebDet.ietaSM());
-      fedIdOccupancyPhiHistMap_[FEDid]->Fill(ebDet.iphiSM());
-
-      fedIdAmplitudeEtaHistMap_[FEDid]->Fill(ebDet.ietaSM(),ampli);
-      fedIdAmplitudePhiHistMap_[FEDid]->Fill(ebDet.iphiSM(),ampli);
-
-      barrelCosmicOccupancyHist_->Fill(ebDet.iphi()-11,ebDet.ieta());
-      barrelCosmicAmplitudeHist_->Fill(ebDet.iphi()-11,ebDet.ieta(),ampli);
-
-      barrelCosmicOccupancyTTHist_->Fill(ebDet.iphi()-11,ebDet.ieta());
-      barrelCosmicAmplitudeTTHist_->Fill(ebDet.iphi()-11,ebDet.ieta(),ampli);
-
-      barrelCosmicAmplitudeEtaHist_->Fill(ebDet.ieta(),ampli);
-      barrelCosmicAmplitudeEtaTTHist_->Fill(ebDet.ieta(),ampli);
-
-      barrelCosmicAmplitudePhiHist_->Fill(ebDet.iphi()-11,ampli);
-      barrelCosmicAmplitudePhiTTHist_->Fill(ebDet.iphi()-11,ampli);
-
-      allFedsTimingHistCosmic_->Fill(hit.jitter());
-      allFedsTimingPhiHistCosmic_->Fill(ebDet.iphi()-11,hit.jitter());
-      if (FEDid>=610&&FEDid<=627)  allFedsTimingPhiEbmHistCosmic_->Fill(ebDet.iphi()-11,hit.jitter());
-      if (FEDid>=628&&FEDid<=645)  allFedsTimingPhiEbpHistCosmic_->Fill(ebDet.iphi()-11,hit.jitter());
-
+          if(!hasGoodNeighbor)
+              continue;
+      }
+      barrelCosmicOccupancyTTHist_->Fill(ebDet.ieta(),ebDet.iphi()-11);
       eventsAndSeedCrys_->Fill(naiveEvtNum_, ic, FEDid);
       crysAndAmplitudesMap_[hashedIndex] = ampli;
       vector<DetId> neighbors = caloTopo->getWindow(ebDet,side_,side_);
@@ -379,8 +226,7 @@ EcalMipGraphs::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
         listAllChannels.insert(*itr);
       }
     }
-   
-
+    
     TH1F* timingHist = FEDsAndTimingHists_[FEDid];
     if(timingHist==0)
     {
@@ -390,9 +236,6 @@ EcalMipGraphs::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     
     timingHist->Fill(hit.jitter());
     allFedsTimingHist_->Fill(hit.jitter());
-    allFedsTimingPhiHist_->Fill(ebDet.iphi()-11,hit.jitter());
-    if (FEDid>=610&&FEDid<=627)  allFedsTimingPhiEbmHist_->Fill(ebDet.iphi()-11,hit.jitter());
-    if (FEDid>=628&&FEDid<=645)  allFedsTimingPhiEbpHist_->Fill(ebDet.iphi()-11,hit.jitter());
   }
 
   // retrieving crystal digi from Event
@@ -443,6 +286,7 @@ EcalMipGraphs::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
         LogWarning("EcalMipGraphs") << "Gain switch detected in evt:" <<
 	  //          naiveEvtNum_ << " sample:" << i << " ic:" << ic << " FED:" << FEDid;
           naiveEvtNum_ << " sample:" << i << " ic:" << ic << " hashedIndex: " << hashedIndex << " FED:" << FEDid << " gainId: " << df.sample(i).gainId() << " adc: " << df.sample(i).adc() << " sample 0: " << df.sample(0).gainId() << " " << df.sample(0).adc() << endl;
+
     }
 
     TGraph oneGraph(10, abscissa,ordinate);
@@ -466,9 +310,6 @@ EcalMipGraphs::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     return;
   
   writeGraphs();
-
-  if (hasGoodCosmic_) cosmicCounter_++;
-
 }
 
 void EcalMipGraphs::writeGraphs()
@@ -517,66 +358,7 @@ EcalMipGraphs::endJob()
 {
   writeGraphs();
   eventsAndSeedCrys_->Write();
-  barrelCosmicE1vE8_->Write();
-  barrelCosmicE1vE2_->Write();
-  barrelCosmicE1vE9_->Write();
-  barrelCosmicE1vE1E2_->Write();
-  barrelCosmicOccupancyHist_->Write();
-  barrelCosmicAmplitudeHist_->Write();
   barrelCosmicOccupancyTTHist_->Write();
-  barrelCosmicAmplitudeTTHist_->Write();
-  barrelCosmicAmplitudeEtaTTHist_->Write();
-  barrelCosmicAmplitudeEtaHist_->Write();
-  barrelCosmicAmplitudePhiTTHist_->Write();
-  barrelCosmicAmplitudePhiHist_->Write();
-
-  for(map<int,TH2F*>::const_iterator itr = fedIdOccupancyHistMap_.begin();
-      itr != fedIdOccupancyHistMap_.end(); ++itr)
-  {
-    itr->second->Write();
-    TProfile* tx = (TProfile*) (itr->second->ProfileX());
-    tx->Write();    
-    TProfile* ty = (TProfile*) (itr->second->ProfileY());
-    ty->Write();    
-  }
-
-  for(map<int,TH1F*>::const_iterator itr = fedIdOccupancyEtaHistMap_.begin();
-      itr != fedIdOccupancyEtaHistMap_.end(); ++itr)
-  {
-    itr->second->Write();
-  }
-
-  for(map<int,TH1F*>::const_iterator itr = fedIdOccupancyPhiHistMap_.begin();
-      itr != fedIdOccupancyPhiHistMap_.end(); ++itr)
-  {
-    itr->second->Write();
-  }
-
-
-  for(map<int,TH2F*>::const_iterator itr = fedIdAmplitudeEtaHistMap_.begin();
-      itr != fedIdAmplitudeEtaHistMap_.end(); ++itr)
-  {
-    itr->second->Write();
-    TProfile* tx = (TProfile*) (itr->second->ProfileX());
-    tx->Write();    
-    TProfile* ty = (TProfile*) (itr->second->ProfileY());
-    ty->Write();    
-  }
-
-  for(map<int,TH2F*>::const_iterator itr = fedIdAmplitudePhiHistMap_.begin();
-      itr != fedIdAmplitudePhiHistMap_.end(); ++itr)
-  {
-    itr->second->Write();
-    TProfile* tx = (TProfile*) (itr->second->ProfileX());
-    tx->Write();    
-    TProfile* ty = (TProfile*) (itr->second->ProfileY());
-    ty->Write();    
-  }
-  allFedsTimingHistCosmic_->Write();
-  allFedsTimingPhiHistCosmic_->Write();
-  allFedsTimingPhiEbpHistCosmic_->Write();
-  allFedsTimingPhiEbmHistCosmic_->Write();
-
   for(map<int,TH1F*>::const_iterator itr = FEDsAndTimingHists_.begin();
       itr != FEDsAndTimingHists_.end(); ++itr)
   {
@@ -589,12 +371,6 @@ EcalMipGraphs::endJob()
     }
   }
   allFedsTimingHist_->Write();
-  allFedsTimingPhiHist_->Write();
-  allFedsTimingPhiEbmHist_->Write();
-  allFedsTimingPhiEbpHist_->Write();
-
-  recHitAmplitudeHist_->Write();
-
   file_->Close();
   std::string channels;
   for(std::vector<int>::const_iterator itr = maskedChannels_.begin();
@@ -605,9 +381,6 @@ EcalMipGraphs::endJob()
   }
   
   LogWarning("EcalMipGraphs") << "Masked channels are: " << channels << " and that is all!";
-
-  LogWarning("EcalMipGraphs") << "Number of cosmic events: " << cosmicCounter_;
-
 }
 
 
@@ -618,3 +391,4 @@ std::string EcalMipGraphs::intToString(int num)
     myStream << num << flush;
     return(myStream.str()); //returns the string form of the stringstream object
 }
+

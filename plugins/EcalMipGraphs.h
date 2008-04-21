@@ -46,7 +46,6 @@
 #include "CaloOnlineTools/EcalTools/interface/EcalFedMap.h"
 
 #include "TFile.h"
-#include "TProfile.h"
 #include "TH1F.h"
 #include "TH2F.h"
 #include "TGraph.h"
@@ -81,9 +80,6 @@ class EcalMipGraphs : public edm::EDAnalyzer {
   int side_;
   int givenSeedCry_;
   double threshold_;
-  double thresholdNeighbor_;
-  double thresholdSingle_;
-  double thresholdLoose_;
   std::string fileName_;
 
   std::set<EBDetId> listAllChannels;
@@ -99,53 +95,12 @@ class EcalMipGraphs : public edm::EDAnalyzer {
   std::map<int,float> crysAndAmplitudesMap_;
   
   TH1F* allFedsTimingHist_;
-
-  // histograms for cosmics analysis
+  
   TH2F* barrelCosmicOccupancyTTHist_;
-  TH2F* barrelCosmicOccupancyHist_;
- 
-  TH2F* barrelCosmicAmplitudeTTHist_;  
-  TH2F* barrelCosmicAmplitudeHist_;
-
-  TH2F* barrelCosmicAmplitudeEtaTTHist_;  
-  TH2F* barrelCosmicAmplitudeEtaHist_;
-  TH2F* barrelCosmicAmplitudePhiTTHist_;  
-  TH2F* barrelCosmicAmplitudePhiHist_;
-
-  TH2F* barrelCosmicE1vE8_;
-  TH2F* barrelCosmicE1vE2_;
-  TH2F* barrelCosmicE1vE9_;
-  TH2F* barrelCosmicE1vE1E2_;
-
-
-  int fedIds[54];
-  std::map<int,TH2F*> fedIdOccupancyHistMap_;
-  std::map<int,TH1F*> fedIdOccupancyEtaHistMap_;
-  std::map<int,TH1F*> fedIdOccupancyPhiHistMap_;
-
-  std::map<int,TH2F*> fedIdAmplitudeEtaHistMap_;
-  std::map<int,TH2F*> fedIdAmplitudePhiHistMap_;
-
-  //  std::map<int,TH1F*> FEDsAndTimingHistsCosmic_;
-  TH1F* allFedsTimingHistCosmic_;
-
-  TH2F* allFedsTimingPhiHist_;
-  TH2F* allFedsTimingPhiHistCosmic_;
-
-  TH2F* allFedsTimingPhiEbpHist_;
-  TH2F* allFedsTimingPhiEbpHistCosmic_;
-  TH2F* allFedsTimingPhiEbmHist_;
-  TH2F* allFedsTimingPhiEbmHistCosmic_;
-  //
-
-  TH1F* recHitAmplitudeHist_;
-
+  
   TFile* file_;
   TNtuple* eventsAndSeedCrys_;
   EcalFedMap* fedMap_;
  
-  int cosmicCounter_;
-
   int naiveEvtNum_; 
-
 };
