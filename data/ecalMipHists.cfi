@@ -1,0 +1,6 @@
+module ecalMipHists = EcalMipHists{
+
+      InputTag EBDigiCollection                   = ecalEBunpacker:ebDigis
+
+	untracked uint32 gain = 12
+}
