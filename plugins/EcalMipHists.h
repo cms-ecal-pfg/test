@@ -34,6 +34,8 @@
 #include "DataFormats/EcalDigi/interface/EcalDataFrame.h"
 #include "DataFormats/DetId/interface/DetId.h"
 #include "DataFormats/EcalRawData/interface/EcalRawDataCollections.h"
+#include "DataFormats/EcalRecHit/interface/EcalUncalibratedRecHit.h"
+#include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
 
 #include "TFile.h"
 #include "TH1.h"
@@ -64,6 +66,8 @@ private:
 // ----------member data ---------------------------
 
 	edm::InputTag EBDigis_;
+	edm::InputTag EBUncalibratedRecHitCollection_;
+	edm::InputTag headerProducer_;
 
 	//histograms - for each quantity, one 2d map and one vector of crystal histogram 
 	
@@ -86,7 +90,6 @@ private:
         TFileDirectory XtalPulseDir_;
 
 	//other parameters
-	unsigned int gain_;
 	int runNum_;
 	int eventNum_;
 };
