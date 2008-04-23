@@ -11,6 +11,6 @@
 <use name=PhysicsTools/UtilAlgos>
 <use name=root>
 <use name=rootcore>
-<library file="plugins.cc EcalDCCHeaderDisplay.cc EcalDigiDisplay.cc EcalMipGraphs.cc EcalMipHists.cc EcalPedHists.cc EcalPnGraphs.cc EcalURecHitHists.cc EcalSuperURecHitHists EcalChannelAnalyzer" name=CaloOnlineToolsEcalToolsPlugins>
+<library file="plugins.cc EcalDCCHeaderDisplay.cc EcalDigiDisplay.cc EcalMipGraphs.cc EcalMipHists.cc EcalPedHists.cc EcalPnGraphs.cc EcalURecHitHists.cc EcalChannelAnalyzer.cc" name=CaloOnlineToolsEcalToolsPlugins>
   <flags EDM_PLUGIN=1>
 </library>
