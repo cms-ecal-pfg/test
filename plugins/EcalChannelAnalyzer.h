@@ -10,18 +10,18 @@
  Implementation:
      <Notes on implementation>
 */
-//
-// Original Author:  Seth COOPER
+// Original Author:  Caterina DOGLIONI
 //         Created:  Th Nov 22 5:46:22 CEST 2007
 // $Id$
 //
-// 
+//
 
 // system include files
 #include <memory>
 #include <vector>
 #include <set>
-
+#include <map>
+#include <string>
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
@@ -30,21 +30,12 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Framework/interface/ESHandle.h"
 
-#include "DataFormats/EcalDigi/interface/EcalDigiCollections.h"
-#include "DataFormats/EcalDigi/interface/EcalDataFrame.h"
-#include "DataFormats/DetId/interface/DetId.h"
-#include "DataFormats/EcalRawData/interface/EcalRawDataCollections.h"
-
 #include "TFile.h"
 #include "TTree.h"
 #include "TH1F.h"
-#include "TH2F.h"
-#include "TProfile2D.h"
 #include "TProfile.h"
-#include "TEntryList.h"
+#include "TEventList.h"
 #include "TCut.h"
-#include "FWCore/ServiceRegistry/interface/Service.h"
-#include "PhysicsTools/UtilAlgos/interface/TFileService.h"
 
 //
 // class declaration
@@ -56,21 +47,38 @@ public:
 	~EcalChannelAnalyzer();
 
 private:
+
+	//enum for graph type
+	enum n_h1Type { H1_AMPLI=0 , H1_PED , H1_JITTER, PROF_PULSE , NTYPES}; 
+
+
 	virtual void beginJob(const edm::EventSetup&) ;
 	virtual void analyze(const edm::Event&, const edm::EventSetup&);
 	virtual void endJob() ;
 
-	TEntryList * getEntryListFromCut (const TCut& cut);
+	//helpers
 	TEventList * getEventListFromCut (const TCut& cut);
 	std::string intToString(int num);
+	std::string printBitmask(std::vector<bool> * bitmask);
+	std::string printBitmaskCuts(std::vector<bool> * bitmask);
+	void initHistTypeMaps();
+	void fillEventListVector(const std::vector<std::string>& v_cuts);   	
+	void writeHistFromFile(int hashedIndex, int ism, int ic, n_h1Type H1TYPE); 
 
 // ----------member data --------------------------
 
 //tree
 TTree * t_;
 //filename for input (where the TTree will be retrieved)
-std::string inputFileName_;
-TFile * fin_;
+std::string inputTreeFileName_;
+std::string inputHistoFileName_;
+std::string outputFileName_;
+
+std::vector<std::string> v_cuts_;
+
+TFile * fin_tree_;
+TFile * fin_histo_;
+TFile * fout_;
 
 //tree variables
 
@@ -103,5 +111,23 @@ TBranch        *b_jitter_avg;   //!
 TBranch        *b_jitter_rms;   //!
 TBranch        *b_ampli_fracBelowThreshold;   //!
 TBranch        *b_entries;   //!
- 
+
+//map for directories:hist type
+std::map < EcalChannelAnalyzer::n_h1Type , std::string > h1TypeToDirectoryMap_;
+
+//map for hist name:hist type
+std::map < EcalChannelAnalyzer::n_h1Type , std::string > h1TypeToNameMap_;
+
+//vector for TEventLists (from TCuts)
+std::vector <TEventList> v_eventList_;
+
+//total TEventList (no duplicate crystals)
+TEventList totalEventList_;
+
+//vector for bitmasks (which cuts?)
+std::vector<bool> * xtalBitmask_[61200];
+
+//number of cuts
+int nCuts_;
+
 };
