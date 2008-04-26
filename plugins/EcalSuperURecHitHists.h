@@ -73,6 +73,7 @@ class EcalSuperURecHitHists : public edm::EDAnalyzer {
   int runNum_;
   double histRangeMax_, histRangeMin_;
   double minSeedAmp_;
+  double minTimingAmp_;
   std::string fileName_;
   
   std::vector<int> maskedChannels_;
