@@ -39,6 +39,7 @@ EcalSuperURecHitHists::EcalSuperURecHitHists(const edm::ParameterSet& iConfig) :
   histRangeMax_ (iConfig.getUntrackedParameter<double>("histogramMaxRange",200.0)),
   histRangeMin_ (iConfig.getUntrackedParameter<double>("histogramMinRange",-10.0)),
   minSeedAmp_ (iConfig.getUntrackedParameter<double>("MinSeedAmp",8.0)),
+  minTimingAmp_ (iConfig.getUntrackedParameter<double>("MinTimingAmp",8.0)),
   fileName_ (iConfig.getUntrackedParameter<std::string>("fileName", std::string("ecalURechHitHists"))),
   minCosmicE1_ (iConfig.getUntrackedParameter<double>("MinCosmicE1", 12.0)),
   minCosmicE2_ (iConfig.getUntrackedParameter<double>("MinCosmicE2", 4.0))  
@@ -266,30 +267,33 @@ EcalSuperURecHitHists::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     allFedsE9Hist_->Fill(E9);
     allFedsE2vsE1Hist_->Fill(ampli,E2);
     allFedsE9vsE1Hist_->Fill(ampli,E9);
-    timingHist->Fill(jitter);
     freqHist->Fill(eventnum);
-    timingHistVsFreq->Fill(jitter, eventnum);
-    timingHistVsAmp->Fill(jitter, ampli);
     iphiProfileHist->Fill(iphi);
     ietaProfileHist->Fill(ieta);
-    allFedsTimingHist_->Fill(jitter);
+
     allFedsFrequencyHist_->Fill(eventnum);
-    allFedsTimingVsAmpHist_->Fill(jitter, ampli);
-    allFedsTimingVsFreqHist_->Fill(jitter, eventnum);
     allFedsiPhiProfileHist_->Fill(iphi);
     allFedsiEtaProfileHist_->Fill(ieta);
     allOccupancy_->Fill(iphi, ieta);
     allOccupancyCoarse_->Fill(iphi, ieta);
     allFedsNumXtalsInE9Hist_->Fill(numXtalsinE9);
     numXtalInE9Hist->Fill(numXtalsinE9);
-    timingHistVsPhi->Fill(jitter, iphiSM);
-    timingHistVsModule->Fill(jitter, ietaSM);
-
-    allFedsTimingPhiHist_->Fill(iphi,jitter);
-    allFedsTimingPhiEtaHist_->Fill(iphi,ieta,jitter);
-    if (FEDid>=610&&FEDid<=627)  allFedsTimingPhiEbmHist_->Fill(iphi,jitter);
-    if (FEDid>=628&&FEDid<=645)  allFedsTimingPhiEbpHist_->Fill(iphi,jitter);
     occupHist->Fill(ietaSM,iphiSM);
+
+    if (ampli > minTimingAmp_) {
+      timingHist->Fill(jitter);
+      timingHistVsFreq->Fill(jitter, eventnum);
+      timingHistVsAmp->Fill(jitter, ampli);
+      allFedsTimingHist_->Fill(jitter);
+      allFedsTimingVsAmpHist_->Fill(jitter, ampli);
+      allFedsTimingVsFreqHist_->Fill(jitter, eventnum);
+      timingHistVsPhi->Fill(jitter, iphiSM);
+      timingHistVsModule->Fill(jitter, ietaSM);
+      allFedsTimingPhiHist_->Fill(iphi,jitter);
+      allFedsTimingPhiEtaHist_->Fill(iphi,ieta,jitter);
+      if (FEDid>=610&&FEDid<=627)  allFedsTimingPhiEbmHist_->Fill(iphi,jitter);
+      if (FEDid>=628&&FEDid<=645)  allFedsTimingPhiEbpHist_->Fill(iphi,jitter);
+    }
 
   }
   
