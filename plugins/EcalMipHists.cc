@@ -141,9 +141,10 @@ EcalMipHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       if(df.sample(i).gainId()!=dccGainId)
         LogWarning("EcalMipHists") << "Gain does not match DCC Header gain in evt:" <<
           eventNum_ << " sample:" << i << " ic:" << ic << " FED:" << FEDid;
-      if(df.sample(i).gainId()==1) gain = 1./12.;
-      if(df.sample(i).gainId()==2) gain = 1./ 6.;
-      if(df.sample(i).gainId()==3) gain = 1./ 1.;
+      //TODO: SIC -- fix this the right way
+      //if(df.sample(i).gainId()==1) gain = 1./12.;
+      //if(df.sample(i).gainId()==2) gain = 1./ 6.;
+      //if(df.sample(i).gainId()==3) gain = 1./ 1.;
     }
 
     EBDataFrame digi(*digiItr);
