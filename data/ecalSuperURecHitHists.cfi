@@ -23,11 +23,13 @@ module ecalSuperURecHitHists = EcalSuperURecHitHists{
       untracked string fileName = 'ecalSuperURecHitHists'
 
       # parameter to specify minimum seed amplitude (ADC)
-      untracked double MinSeedAmp = 8.0
+      untracked double MinSeedAmp = 5.0
 
       # parameters to specify cosmics selection; algorithm rejects cosmics if:
       # (ampli < MinCosmicE1) && (secondMin < MinCosmicE2) 
-      untracked double MinCosmicE1 = 12.0
-      untracked double MinCosmicE2 = 4.0
+      untracked double MinCosmicE1 = 15.0
+      untracked double MinCosmicE2 = 5.0
       	
+      # for filling timing histograms
+      untracked double MinTimingAmp = 8.0
 }
