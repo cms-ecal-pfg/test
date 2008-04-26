@@ -38,11 +38,11 @@ EcalSuperURecHitHists::EcalSuperURecHitHists(const edm::ParameterSet& iConfig) :
   runNum_(-1),
   histRangeMax_ (iConfig.getUntrackedParameter<double>("histogramMaxRange",200.0)),
   histRangeMin_ (iConfig.getUntrackedParameter<double>("histogramMinRange",-10.0)),
-  minSeedAmp_ (iConfig.getUntrackedParameter<double>("MinSeedAmp",8.0)),
+  minSeedAmp_ (iConfig.getUntrackedParameter<double>("MinSeedAmp",5.0)),
   minTimingAmp_ (iConfig.getUntrackedParameter<double>("MinTimingAmp",8.0)),
   fileName_ (iConfig.getUntrackedParameter<std::string>("fileName", std::string("ecalURechHitHists"))),
-  minCosmicE1_ (iConfig.getUntrackedParameter<double>("MinCosmicE1", 12.0)),
-  minCosmicE2_ (iConfig.getUntrackedParameter<double>("MinCosmicE2", 4.0))  
+  minCosmicE1_ (iConfig.getUntrackedParameter<double>("MinCosmicE1", 15.0)),
+  minCosmicE2_ (iConfig.getUntrackedParameter<double>("MinCosmicE2", 5.0))  
 {
   naiveEvtNum_ = 0;
   cosmicCounter_ = 0;
