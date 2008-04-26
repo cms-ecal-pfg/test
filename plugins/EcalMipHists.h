@@ -29,6 +29,7 @@
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Framework/interface/ESHandle.h"
+#include "FWCore/Framework/interface/EventSetup.h"
 
 #include "DataFormats/EcalDigi/interface/EcalDigiCollections.h"
 #include "DataFormats/EcalDigi/interface/EcalDataFrame.h"
@@ -36,6 +37,9 @@
 #include "DataFormats/EcalRawData/interface/EcalRawDataCollections.h"
 #include "DataFormats/EcalRecHit/interface/EcalUncalibratedRecHit.h"
 #include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
+
+#include "Geometry/EcalMapping/interface/EcalElectronicsMapping.h"
+#include "Geometry/EcalMapping/interface/EcalMappingRcd.h"
 
 #include "TFile.h"
 #include "TH1.h"
@@ -68,6 +72,7 @@ private:
 	edm::InputTag EBDigis_;
 	edm::InputTag EBUncalibratedRecHitCollection_;
 	edm::InputTag headerProducer_;
+        const EcalElectronicsMapping* ecalElectronicsMap_;
 
 	//histograms - for each quantity, one 2d map and one vector of crystal histogram 
 	

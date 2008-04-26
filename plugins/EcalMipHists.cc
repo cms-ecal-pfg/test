@@ -101,9 +101,11 @@ EcalMipHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   
   for (EcalUncalibratedRecHitCollection::const_iterator hitItr = EBhits->begin(); hitItr != EBhits->end(); ++hitItr)
   {
-    
     EBDetId ebDetId = hitItr->id();
     int xtal_hashed = ebDetId.hashedIndex();
+    int ic = ebDetId.ic();
+    EcalElectronicsId elecId = ecalElectronicsMap_->getElectronicsId(ebDetId);
+    int FEDid = 600+elecId.dccId(); 
     double jitter = hitItr->jitter();
     double amplitude = hitItr->amplitude();
     
@@ -121,8 +123,31 @@ EcalMipHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       continue;
     }
 
+    int dccGainId = FEDsAndDCCHeaders_[FEDid].getMgpaGain();
+    int dccGainHuman;
+    double gain = 1.;
+    if      (dccGainId ==1) dccGainHuman =12;
+    else if (dccGainId ==2) dccGainHuman =6;
+    else if (dccGainId ==3) dccGainHuman =1;
+    else                 dccGainHuman =-1; 
+    
+    
+    int sample0GainId = EBDataFrame(*digiItr).sample(0).gainId();
+    for (int i=0; (unsigned int)i< (*digiItr).size() ; ++i ) {
+      EBDataFrame df(*digiItr); 
+      if(df.sample(i).gainId()!=sample0GainId)
+        LogWarning("EcalMipHists") << "Gain switch detected in evt:" <<
+          eventNum_ << " sample:" << i << " ic:" << ic << " FED:" << FEDid;
+      if(df.sample(i).gainId()!=dccGainId)
+        LogWarning("EcalMipHists") << "Gain does not match DCC Header gain in evt:" <<
+          eventNum_ << " sample:" << i << " ic:" << ic << " FED:" << FEDid;
+      if(df.sample(i).gainId()==1) gain = 1./12.;
+      if(df.sample(i).gainId()==2) gain = 1./ 6.;
+      if(df.sample(i).gainId()==3) gain = 1./ 1.;
+    }
+
     EBDataFrame digi(*digiItr);
-    double pedestal = (double)(digi.sample(0).adc() + digi.sample(1).adc())/(double)2;
+    double pedestal = (double)(digi.sample(0).adc()*gain + digi.sample(1).adc()*gain)/(double)2;
     
     //----------------XTALS ampli/jitter
 
@@ -183,8 +208,12 @@ EcalMipHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 // ------------ method called once each job just before starting event loop  ------------
   void 
-EcalMipHists::beginJob(const edm::EventSetup&)
+EcalMipHists::beginJob(const edm::EventSetup& c)
 {
+  edm::ESHandle< EcalElectronicsMapping > handle;
+  c.get< EcalMappingRcd >().get(handle);
+  ecalElectronicsMap_ = handle.product();
+
   //booking maps
 
   //Jitter
