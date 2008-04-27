@@ -267,11 +267,11 @@ EcalSuperURecHitHists::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     allFedsE9Hist_->Fill(E9);
     allFedsE2vsE1Hist_->Fill(ampli,E2);
     allFedsE9vsE1Hist_->Fill(ampli,E9);
-    freqHist->Fill(eventnum);
+    freqHist->Fill(naiveEvtNum_);
     iphiProfileHist->Fill(iphi);
     ietaProfileHist->Fill(ieta);
 
-    allFedsFrequencyHist_->Fill(eventnum);
+    allFedsFrequencyHist_->Fill(naiveEvtNum_);
     allFedsiPhiProfileHist_->Fill(iphi);
     allFedsiEtaProfileHist_->Fill(ieta);
     allOccupancy_->Fill(iphi, ieta);
@@ -282,11 +282,11 @@ EcalSuperURecHitHists::analyze(const edm::Event& iEvent, const edm::EventSetup& 
 
     if (ampli > minTimingAmp_) {
       timingHist->Fill(jitter);
-      timingHistVsFreq->Fill(jitter, eventnum);
+      timingHistVsFreq->Fill(jitter, naiveEvtNum_);
       timingHistVsAmp->Fill(jitter, ampli);
       allFedsTimingHist_->Fill(jitter);
       allFedsTimingVsAmpHist_->Fill(jitter, ampli);
-      allFedsTimingVsFreqHist_->Fill(jitter, eventnum);
+      allFedsTimingVsFreqHist_->Fill(jitter, naiveEvtNum_);
       timingHistVsPhi->Fill(jitter, iphiSM);
       timingHistVsModule->Fill(jitter, ietaSM);
       allFedsTimingPhiHist_->Fill(iphi,jitter);
@@ -298,7 +298,7 @@ EcalSuperURecHitHists::analyze(const edm::Event& iEvent, const edm::EventSetup& 
   }
   
   numberofCosmicsHist_->Fill(numberOfCosmics);
-  if (numberOfCosmics > 0 ) numberofGoodEvtFreq_->Fill(eventnum);
+  if ( numberOfCosmics > 0 ) numberofGoodEvtFreq_->Fill(naiveEvtNum_);
   if ( numberOfCosmics > 0 ) cosmicCounter_++;
   
 }
