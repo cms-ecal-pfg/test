@@ -99,56 +99,13 @@ EcalMipHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   edm::Handle<EcalUncalibratedRecHitCollection> EBhits; 
   iEvent.getByLabel(EBUncalibratedRecHitCollection_, EBhits);
   
-  for (EcalUncalibratedRecHitCollection::const_iterator hitItr = EBhits->begin(); hitItr != EBhits->end(); ++hitItr)
+  for (EcalUncalibratedRecHitCollection::const_iterator hitItr = EBhits->begin();
+      hitItr != EBhits->end(); ++hitItr)
   {
     EBDetId ebDetId = hitItr->id();
     int xtal_hashed = ebDetId.hashedIndex();
-    int ic = ebDetId.ic();
-    EcalElectronicsId elecId = ecalElectronicsMap_->getElectronicsId(ebDetId);
-    int FEDid = 600+elecId.dccId(); 
     double jitter = hitItr->jitter();
     double amplitude = hitItr->amplitude();
-    
-    // find the digi
-    EBDigiCollection::const_iterator digiItr = EBdigis->begin();
-
-    while(digiItr != EBdigis->end() && ((*digiItr).id()!=ebDetId))
-    {
-      ++digiItr;
-    }
-    if(digiItr==EBdigis->end())
-    {
-      LogWarning("EcalMipHists") << "Cannot find digi for ic:" << ebDetId.ic()
-        << " evt:" << eventNum_;
-      continue;
-    }
-
-    int dccGainId = FEDsAndDCCHeaders_[FEDid].getMgpaGain();
-    int dccGainHuman;
-    double gain = 1.;
-    if      (dccGainId ==1) dccGainHuman =12;
-    else if (dccGainId ==2) dccGainHuman =6;
-    else if (dccGainId ==3) dccGainHuman =1;
-    else                 dccGainHuman =-1; 
-    
-    
-    int sample0GainId = EBDataFrame(*digiItr).sample(0).gainId();
-    for (int i=0; (unsigned int)i< (*digiItr).size() ; ++i ) {
-      EBDataFrame df(*digiItr); 
-      if(df.sample(i).gainId()!=sample0GainId)
-        LogWarning("EcalMipHists") << "Gain switch detected in evt:" <<
-          eventNum_ << " sample:" << i << " ic:" << ic << " FED:" << FEDid;
-      if(df.sample(i).gainId()!=dccGainId)
-        LogWarning("EcalMipHists") << "Gain does not match DCC Header gain in evt:" <<
-          eventNum_ << " sample:" << i << " ic:" << ic << " FED:" << FEDid;
-      //TODO: SIC -- fix this the right way
-      //if(df.sample(i).gainId()==1) gain = 1./12.;
-      //if(df.sample(i).gainId()==2) gain = 1./ 6.;
-      //if(df.sample(i).gainId()==3) gain = 1./ 1.;
-    }
-
-    EBDataFrame digi(*digiItr);
-    double pedestal = (double)(digi.sample(0).adc()*gain + digi.sample(1).adc()*gain)/(double)2;
     
     //----------------XTALS ampli/jitter
 
@@ -173,9 +130,61 @@ EcalMipHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       if (!v_h1_XtalAmpli_[xtal_hashed]) std::cout << "TFileService (xtal ampli) had a problem and you will have a problem soon (segfault)" << std::endl;
     }
 
-    v_h1_XtalAmpli_[xtal_hashed]->Fill(amplitude-pedestal);
-    prof2_XtalAmpli_->Fill(ebDetId.iphi()-0.5, ebDetId.ieta(), amplitude-pedestal);
+    v_h1_XtalAmpli_[xtal_hashed]->Fill(amplitude);
+    prof2_XtalAmpli_->Fill(ebDetId.iphi()-0.5, ebDetId.ieta(), amplitude);
 
+  }//end RecHit loop
+
+  for(EBDigiCollection::const_iterator digiItr = EBdigis->begin();
+      digiItr != EBdigis->end(); ++digiItr)
+  {
+    EBDetId ebDetId = digiItr->id();
+    EBDataFrame digi(*digiItr);
+    EcalElectronicsId elecId = ecalElectronicsMap_->getElectronicsId(ebDetId);
+    //int FEDid = 600+elecId.dccId(); 
+    //int ic = ebDetId.ic();
+    int xtal_hashed = ebDetId.hashedIndex();
+
+    //TODO: DCC gain checking needed or not?
+    //int dccGainId = FEDsAndDCCHeaders_[FEDid].getMgpaGain();
+    //int dccGainHuman;
+    //double gain = 1.;
+    //if      (dccGainId ==1) dccGainHuman =12;
+    //else if (dccGainId ==2) dccGainHuman =6;
+    //else if (dccGainId ==3) dccGainHuman =1;
+    //else                 dccGainHuman =-1; 
+    
+    double sampleADC[10];
+    for(int i=0; i<2; ++i)
+    {
+      EBDataFrame df(*digiItr);
+      double gain = 12.;
+      if(df.sample(i).gainId()==1)
+        gain = 1.;
+      else if(df.sample(i).gainId()==2)
+        gain = 2.;
+      sampleADC[i] = 200+(df.sample(i).adc()-200)*gain;
+    }
+
+    double pedestal = (double)(sampleADC[0]+sampleADC[1])/(double)2;
+    //debug
+    //cout << "DCCGainId:" << dccGainId << " sample0 gain:" << sample0GainId << endl; 
+    
+    for (int i=0; (unsigned int)i< digiItr->size(); ++i ) {
+      EBDataFrame df(*digiItr);
+      //if(df.sample(i).gainId()!=sample0GainId)
+      //  LogWarning("EcalMipHists") << "Gain switch detected in evt:" <<
+      //    eventNum_ << " sample:" << i << " ic:" << ic << " FED:" << FEDid;
+      //if(df.sample(i).gainId()!=dccGainId)
+      //  LogWarning("EcalMipHists") << "Gain does not match DCC Header gain in evt:" <<
+      //    eventNum_ << " sample:" << i << " ic:" << ic << " FED:" << FEDid;
+      double gain = 12.;
+      if(df.sample(i).gainId()==1)
+        gain = 1.;
+      else if(df.sample(i).gainId()==2)
+        gain = 2.;
+      sampleADC[i] = pedestal+(df.sample(i).adc()-pedestal)*gain;
+    }
 
     //-------------------XTALS ped
 
@@ -197,13 +206,12 @@ EcalMipHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       if (!v_prof_XtalPulse_[xtal_hashed]) std::cout << "TFileService (xtals pulse) had a problem and you will have a problem soon (segfault)" << std::endl;
     }
     for (int i=0; i<10; i++) {
-
-      double sample = digi.sample(i).adc();
-      v_prof_XtalPulse_[xtal_hashed]->Fill(i+0.5,sample,1);
+      //double sample = digi.sample(i).adc();
+      v_prof_XtalPulse_[xtal_hashed]->Fill(i+0.5,sampleADC[i],1);
 
     }
+  }//end digi loop
 
-  }//end RecHit loop
 }//end analyze
 
 
