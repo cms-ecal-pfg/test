@@ -8,6 +8,7 @@
 #include "CaloOnlineTools/EcalTools/plugins/EcalPedHists.h"
 #include "CaloOnlineTools/EcalTools/plugins/EcalURecHitHists.h"
 #include "CaloOnlineTools/EcalTools/plugins/EcalSuperURecHitHists.h"
+#include "CaloOnlineTools/EcalTools/plugins/EcalTPGAnalyzer.h"
 
 
 DEFINE_FWK_MODULE(EcalDigiDisplay);
@@ -19,5 +20,5 @@ DEFINE_FWK_MODULE(EcalChannelAnalyzer);
 DEFINE_FWK_MODULE(EcalPedHists);
 DEFINE_FWK_MODULE(EcalURecHitHists);
 DEFINE_FWK_MODULE(EcalSuperURecHitHists);
-
+DEFINE_FWK_MODULE(EcalTPGAnalyzer);
 
