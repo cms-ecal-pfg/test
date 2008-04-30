@@ -42,9 +42,11 @@ EcalTPGAnalyzer::EcalTPGAnalyzer(const edm::ParameterSet&  iConfig)
   label_= iConfig.getParameter<std::string>("Label");
   producer_= iConfig.getParameter<std::string>("Producer");
   digi_label_= iConfig.getParameter<std::string>("DigiLabel");
-  digi_producer_=  iConfig.getParameter<std::string>("DigiProducer");
+  digi_producerEB_=  iConfig.getParameter<std::string>("DigiProducerEB");
+  digi_producerEE_=  iConfig.getParameter<std::string>("DigiProducerEE");
   emul_label_= iConfig.getParameter<std::string>("EmulLabel");
   emul_producer_=  iConfig.getParameter<std::string>("EmulProducer");
+  useEE_ = iConfig.getParameter<bool>("UseEndCap");
   adcCut_ =  iConfig.getParameter<int>("ADCCut");
   shapeCut_ =  iConfig.getParameter<int>("shapeCut");
   occupancyCut_ =  iConfig.getParameter<int>("occupancyCut");
@@ -110,6 +112,20 @@ EcalTPGAnalyzer::~EcalTPGAnalyzer()
   histfile_->Close();
 }
 
+void EcalTPGAnalyzer::beginJob(const edm::EventSetup& evtSetup)
+{
+  // geometry
+  ESHandle<CaloGeometry> theGeometry;
+  ESHandle<CaloSubdetectorGeometry> theEndcapGeometry_handle, theBarrelGeometry_handle;
+  evtSetup.get<IdealGeometryRecord>().get( theGeometry );
+  evtSetup.get<IdealGeometryRecord>().get("EcalEndcap",theEndcapGeometry_handle);
+  evtSetup.get<IdealGeometryRecord>().get("EcalBarrel",theBarrelGeometry_handle);
+  evtSetup.get<IdealGeometryRecord>().get(eTTmap_);
+  theEndcapGeometry_ = &(*theEndcapGeometry_handle);
+  theBarrelGeometry_ = &(*theBarrelGeometry_handle);
+}
+
+
 void EcalTPGAnalyzer::analyze(const edm::Event& iEvent, const  edm::EventSetup & iSetup)
 {
   using namespace edm;
@@ -118,12 +134,12 @@ void EcalTPGAnalyzer::analyze(const edm::Event& iEvent, const  edm::EventSetup &
   map<EcalTrigTowerDetId, towerEner> mapTower ;
   map<EcalTrigTowerDetId, towerEner>::iterator itTT ;
   
-  // Get xtal digi inputs
-  edm::Handle<EBDigiCollection> digi;
-  iEvent.getByLabel(digi_label_, digi_producer_, digi);
-  for (unsigned int i=0;i<digi.product()->size();i++) {
-    const EBDataFrame & df = (*(digi.product()))[i];
-    
+  // Get EB xtal digi inputs
+  edm::Handle<EBDigiCollection> digiEB;
+  iEvent.getByLabel(digi_label_, digi_producerEB_, digiEB);
+
+  for (unsigned int i=0;i<digiEB.product()->size();i++) {
+    const EBDataFrame & df = (*(digiEB.product()))[i];    
     int gain, adc ;
     float E_xtal = 0. ; 
     int theSamp = 0 ;
@@ -164,6 +180,53 @@ void EcalTPGAnalyzer::analyze(const edm::Event& iEvent, const  edm::EventSetup &
     }
   }
 
+  if (useEE_) {
+    // Get EE xtal digi inputs
+    edm::Handle<EEDigiCollection> digiEE;
+    iEvent.getByLabel(digi_label_, digi_producerEE_, digiEE);
+    
+    for (unsigned int i=0;i<digiEE.product()->size();i++) {
+      const EEDataFrame & df = (*(digiEE.product()))[i];    
+      int gain, adc ;
+      float E_xtal = 0. ; 
+      int theSamp = 0 ;
+      float mean = 0., max = -999 ; 
+      for (int samp = 0 ; samp<10 ; samp++) {
+	adc = df[samp].adc() ;
+	if (samp<2) mean += adc ;
+	if (adc>max) {
+	  max = adc ;
+	  theSamp = samp ;
+	}
+      }
+      mean /= 2 ;
+      if (mean>0 && max >= mean + adcCut_) {
+	gain = df[theSamp].gainId() ;
+	adc = df[theSamp].adc() ;
+	if (gain == 1) E_xtal = (adc-mean) ;
+	if (gain == 2) E_xtal = 2.*(adc-mean) ;
+	if (gain == 3) E_xtal = 12.*(adc-mean) ;
+	if (gain == 0) E_xtal = 12.*(adc-mean) ;
+      }
+      const EEDetId & id=df.id();
+      const EcalTrigTowerDetId towid = (*eTTmap_).towerOf(id);
+      itTT = mapTower.find(towid) ;
+      if (itTT != mapTower.end()) {
+	(itTT->second).eRec_ += E_xtal ;
+	for (int samp = 0 ; samp<10 ; samp++) (itTT->second).data_[samp] += df[samp].adc()-mean ;
+	(itTT->second).iphi_ = towid.iphi() ;
+	(itTT->second).ieta_ = towid.ieta() ;
+      }
+      else {
+	towerEner tE ;
+	tE.eRec_ = E_xtal ;
+	for (int samp = 0 ; samp<10 ; samp++) tE.data_[samp] = df[samp].adc()-mean ;
+	tE.iphi_ = towid.iphi() ;
+	tE.ieta_ = towid.ieta() ;
+	mapTower[towid] = tE ;
+      }
+    }
+  }
 
   // Get TP data
   edm::Handle<EcalTrigPrimDigiCollection> tp;
@@ -217,6 +280,7 @@ void EcalTPGAnalyzer::analyze(const edm::Event& iEvent, const  edm::EventSetup &
   }
 
 }
+
   
 void EcalTPGAnalyzer::fillShape(towerEner & t)
 {

@@ -10,11 +10,17 @@
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
+#include "Geometry/CaloTopology/interface/EcalTrigTowerConstituentsMap.h"
+#include "Geometry/CaloGeometry/interface/CaloSubdetectorGeometry.h"
 #include <vector>
 #include <string>
 #include <TFile.h>
 #include <TTree.h>
 #include <TH2.h>
+
+
+class CaloSubdetectorGeometry ;
+
 
 // Auxiliary class
 class towerEner {   
@@ -39,6 +45,7 @@ public:
   explicit EcalTPGAnalyzer(const edm::ParameterSet&);
   ~EcalTPGAnalyzer();  
   virtual void analyze(const edm::Event&, const edm::EventSetup&);
+  virtual void beginJob(const edm::EventSetup&) ;
   
 private:
   void fillShape(towerEner & t) ;
@@ -66,10 +73,15 @@ private:
   std::string label_;
   std::string producer_;
   std::string digi_label_;
-  std::string digi_producer_;
+  std::string digi_producerEB_, digi_producerEE_ ;
   std::string emul_label_;
   std::string emul_producer_;
+  bool useEE_ ;
   int adcCut_, shapeCut_, occupancyCut_ ;
   int tpgRef_ ;
+
+  const CaloSubdetectorGeometry * theEndcapGeometry_ ;
+  const CaloSubdetectorGeometry * theBarrelGeometry_ ;
+  edm::ESHandle<EcalTrigTowerConstituentsMap> eTTmap_;
 };
 
