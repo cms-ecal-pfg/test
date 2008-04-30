@@ -19,12 +19,14 @@ Implementation:
 
 // system include files
 
+#include <iomanip>
+
 #include "CaloOnlineTools/EcalTools/plugins/EcalChannelAnalyzer.h"
 #include "TCut.h"
 #include "TTree.h"
 #include "TFile.h"
 #include "TH1F.h"
-
+#include "FWCore/MessageLogger/interface/MessageLogger.h" 
 #define MAX_XTALS 61200
 
 using namespace edm;
@@ -73,10 +75,13 @@ EcalChannelAnalyzer::EcalChannelAnalyzer(const edm::ParameterSet& iConfig)
 
 	//--- INIT TREE
 
-	//TODO:name of tree from .cfg + try/catch 
+	//TODO:name of tree from .cfg + try/catch
+
+
 	t_=(TTree*)fin_tree_->Get("xtal_tree");
 
-	//std::cout << "treename=" << t_->GetName() << std::endl;
+	//TODO: try/catch
+	if (t_==0) std::cout << "no tree" << std::endl; 
 
 	t_->SetBranchAddress("ic", &ic, &b_ic);
 	t_->SetBranchAddress("ism", &ism, &b_ism);
@@ -91,6 +96,9 @@ EcalChannelAnalyzer::EcalChannelAnalyzer(const edm::ParameterSet& iConfig)
 	t_->SetBranchAddress("jitter_rms", &jitter_rms, &b_jitter_rms);
 	t_->SetBranchAddress("ampli_fracBelowThreshold", &ampli_fracBelowThreshold, &b_ampli_fracBelowThreshold);
 	t_->SetBranchAddress("entries", &entries, &b_entries);
+	t_->SetBranchAddress("entriesOverAvg",&entriesOverAvg, &b_entriesOverAvg);
+	t_->SetBranchAddress("entriesSigmaDistance",&entriesSigmaDistance, &b_entriesSigmaDistance);	
+
 
 }
 
@@ -119,6 +127,7 @@ EcalChannelAnalyzer::beginJob(const edm::EventSetup&)
 
 	//filling event list vector with lists produced by cuts
 	//by construction, list made from cut in v_cuts_[i] is in v_eventList_[i] 
+
 	fillEventListVector(v_cuts_);
 
 	//loop on all event lists 
@@ -161,13 +170,13 @@ EcalChannelAnalyzer::endJob()
 
 	//printouts
 
-	std::cout << "------ORDERED LIST OF CUTS-----" << std::endl;
-	
+	edm::LogVerbatim("") << "------ORDERED LIST OF CUTS-----"; 
+
 	for (unsigned int i=0; i<v_eventList_.size(); ++i){
-		std::cout << i << ". " << v_eventList_[i].GetTitle() << std::endl; 
+		 edm::LogVerbatim("")  << i << ". " << v_eventList_[i].GetTitle() << std::endl; 
 	}
 
-	std::cout << "------LISTS FOR SINGLE CUTS-----" << std::endl;
+	/*std::cout << "------LISTS FOR SINGLE CUTS-----" << std::endl;
 
 	for (unsigned int i=0; i<v_eventList_.size(); i++){
 		std::cout << v_eventList_[i].GetTitle() << std::endl; 
@@ -178,7 +187,109 @@ EcalChannelAnalyzer::endJob()
 	std::cout << "------ALL CRYSTALS-----" << std::endl;
 
 	t_->SetEventList(&totalEventList_);
-	t_->Scan();
+	t_->Scan();*/
+
+
+	//----DIRTY HACK UNTIL THINGS ARE FIXED WITH ROOT OSTREAMS and above loops can be used
+
+	//loop on all event lists 
+	for (unsigned int i=0; i<v_eventList_.size(); i++){
+		//loop on events in event lists
+
+		edm::LogVerbatim("") << "Event List for cut: " <<  v_eventList_[i].GetTitle();
+
+		edm::LogVerbatim("") << "ism" << "\t" 
+			<< "ic     " << "\t" 
+			<< "hi     " << "\t" 
+			<< "ieta   " << "\t" 
+			<< "iphi   " << "\t" 
+			<< "amp_avg" << "\t" 
+			<< "amp_rms" << "\t"
+			<< "ped_avg" << "\t" 
+			<< "ped_rms" << "\t"
+			<< "jit_avg" << "\t"
+			<< "jit_rms" << "\t"
+			<< "fracAmp" << "\t"
+			<< "entries" << "\t"
+			<< "fracEnt" << "\t"
+			<< "failed " << "\t" ;
+
+
+		for (unsigned int j=0; j<(unsigned int)v_eventList_[i].GetN(); j++) {
+
+			t_->GetEntry(v_eventList_[i].GetEntry(j));
+
+			//sorry for the awkward formatting of columns...
+
+			edm::LogVerbatim("") << ism << "\t" 
+				<< ic << "\t" 
+				<< hashedIndex << "\t" 
+				<< ieta << "\t" 
+				<< iphi << "\t" 
+				<< std::setprecision(3) << ampli_avg << "\t" 
+				<< std::setprecision(3) << ampli_rms << "\t"
+				<< std::setprecision(3) << ped_avg << "\t" 
+				<< std::setprecision(3) << ped_rms << "\t"
+				<< std::setprecision(3) << jitter_avg << "\t"
+				<< std::setprecision(3) << jitter_rms <<  "\t"
+                                << std::setprecision(3) << ampli_fracBelowThreshold << "\t"
+				<< std::setprecision(6) << entries << "\t"
+				<< std::setprecision(3) << entriesOverAvg << "\t"
+				<< printBitmaskCuts(xtalBitmask_[hashedIndex]); 
+
+		}
+
+	}
+	//event list for all cuts
+
+	edm::LogVerbatim("") << "Event List for all cuts";
+
+                edm::LogVerbatim("") << "ism" << "\t"
+                        << "ic     " << "\t"
+                        << "hi     " << "\t"    
+                        << "ieta   " << "\t"
+                        << "iphi   " << "\t"
+                        << "amp_avg" << "\t"  
+                        << "amp_rms" <<  "\t"
+                        << "ped_avg" << "\t"
+                        << "ped_rms" << "\t"
+                        << "jit_avg" <<  "\t"
+                        << "jit_rms" <<  "\t"
+                        << "fracAmp" << "\t"
+                        << "entries" << "\t"
+                        << "fracEnt" << "\t"
+                        << "failed " << "\t" ;
+
+
+	for (unsigned int j=0; j<(unsigned int)totalEventList_.GetN(); j++) {
+
+		t_->GetEntry(totalEventList_.GetEntry(j));
+
+
+                        edm::LogVerbatim("") << ism << "\t"
+                                << ic << "\t"
+                                << hashedIndex << "\t"
+                                << ieta << "\t"
+                                << iphi << "\t"
+                                << std::setprecision(3) << ampli_avg << "\t"
+                                << std::setprecision(3) << ampli_rms << "\t"
+                                << std::setprecision(3) << ped_avg << "\t"
+                                << std::setprecision(3) << ped_rms << "\t"
+                                << std::setprecision(3) << jitter_avg << "\t"
+                                << std::setprecision(3) << jitter_rms <<  "\t"
+                                << std::setprecision(3) << ampli_fracBelowThreshold << "\t"
+                                << std::setprecision(6) << entries << "\t"
+                                << std::setprecision(3) << entriesOverAvg << "\t"
+                                << printBitmaskCuts(xtalBitmask_[hashedIndex]);
+
+
+
+
+	}
+
+
+	//---END DIRTY HACK
+
 
 	//cleanup
 	for (unsigned int i=0; i<MAX_XTALS; i++) {
