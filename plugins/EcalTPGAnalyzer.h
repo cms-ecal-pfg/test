@@ -48,6 +48,7 @@ public:
   virtual void beginJob(const edm::EventSetup&) ;
   
 private:
+  void fillShape(EBDataFrame & df) ;
   void fillShape(towerEner & t) ;
   void fillOccupancyPlots(towerEner & t) ;
   void fillEnergyPlots(towerEner & t) ;
@@ -57,6 +58,7 @@ private:
   TFile *histfile_;
   TTree *tree_ ;
   TH2F * shape_ ;
+  TH2F * shapeMax_ ;
   TH2F * occupancyTP_ ;
   TH2F * occupancyTPEmul_ ;
   TH2F * occupancyTPEmulMax_ ;

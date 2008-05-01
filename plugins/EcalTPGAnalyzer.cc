@@ -55,7 +55,10 @@ EcalTPGAnalyzer::EcalTPGAnalyzer(const edm::ParameterSet&  iConfig)
   histfile_ = new TFile("histosTPG.root","RECREATE");
 
   //histo
-  shape_ = new TH2F("shape","Tower Shape",11, -1, 10, 120, -1.1, 1.1) ; 
+  shape_ = new TH2F("shape","Tower Pulses",110, -1, 10, 120, -1.1, 1.1) ;
+  shape_->GetXaxis()->SetTitle("sample nb") ;
+  shapeMax_ = new TH2F("shapeMax","Crystal Max Shapes",110, -1, 10, 120, -1.1, 1.1) ; 
+  shapeMax_->GetXaxis()->SetTitle("sample nb") ;
 
   occupancyTP_ = new TH2F("occupancyTP", "Occupancy TP data", 38, -19, 19, 73, 0, 73) ;
   occupancyTP_->GetXaxis()->SetTitle("eta index") ;
@@ -95,6 +98,7 @@ EcalTPGAnalyzer::EcalTPGAnalyzer(const edm::ParameterSet&  iConfig)
 EcalTPGAnalyzer::~EcalTPGAnalyzer()
 {
   shape_->Write() ;
+  shapeMax_->Write() ;
   occupancyTP_->Write() ;
   occupancyTPEmul_->Write() ;
   occupancyTPEmulMax_->Write() ;
@@ -130,13 +134,16 @@ void EcalTPGAnalyzer::analyze(const edm::Event& iEvent, const  edm::EventSetup &
 {
   using namespace edm;
   using namespace std;
-
+  
   map<EcalTrigTowerDetId, towerEner> mapTower ;
   map<EcalTrigTowerDetId, towerEner>::iterator itTT ;
   
   // Get EB xtal digi inputs
   edm::Handle<EBDigiCollection> digiEB;
   iEvent.getByLabel(digi_label_, digi_producerEB_, digiEB);
+  
+  float E_xtal_Max = -999. ;
+  EBDataFrame dfMax ;
 
   for (unsigned int i=0;i<digiEB.product()->size();i++) {
     const EBDataFrame & df = (*(digiEB.product()))[i];    
@@ -152,33 +159,53 @@ void EcalTPGAnalyzer::analyze(const edm::Event& iEvent, const  edm::EventSetup &
 	theSamp = samp ;
       }
     }
-    mean /= 2 ;
+    mean /= 2. ;
     if (mean>0 && max >= mean + adcCut_) {
       gain = df[theSamp].gainId() ;
       adc = df[theSamp].adc() ;
-      if (gain == 1) E_xtal = (adc-mean) ;
-      if (gain == 2) E_xtal = 2.*(adc-mean) ;
-      if (gain == 3) E_xtal = 12.*(adc-mean) ;
-      if (gain == 0) E_xtal = 12.*(adc-mean) ;
+      if (gain == 1) E_xtal = adc-mean ;
+      if (gain == 2) E_xtal = 2.*adc-mean ;
+      if (gain == 3) E_xtal = 12.*adc-mean ;
+      if (gain == 0) E_xtal = 12.*adc-mean ;
     }
+    if (E_xtal > E_xtal_Max) {
+      E_xtal_Max = E_xtal ;
+      dfMax = df ;
+    }
+    
     const EBDetId & id=df.id();
     const EcalTrigTowerDetId towid= id.tower();
     itTT = mapTower.find(towid) ;
     if (itTT != mapTower.end()) {
       (itTT->second).eRec_ += E_xtal ;
-      for (int samp = 0 ; samp<10 ; samp++) (itTT->second).data_[samp] += df[samp].adc()-mean ;
+      for (int samp = 0 ; samp<10 ; samp++) {
+	gain = df[samp].gainId() ;
+	adc = df[samp].adc() ;
+	if (gain == 1) (itTT->second).data_[samp] += adc-mean ;
+	if (gain == 2) (itTT->second).data_[samp] += 2.*adc-mean ;
+	if (gain == 3) (itTT->second).data_[samp] += 12.*adc-mean ;
+	if (gain == 0) (itTT->second).data_[samp] += 12.*adc-mean ;
+      }
       (itTT->second).iphi_ = towid.iphi() ;
       (itTT->second).ieta_ = towid.ieta() ;
     }
     else {
       towerEner tE ;
       tE.eRec_ = E_xtal ;
-      for (int samp = 0 ; samp<10 ; samp++) tE.data_[samp] = df[samp].adc()-mean ;
+      for (int samp = 0 ; samp<10 ; samp++) {
+	gain = df[samp].gainId() ;
+	adc = df[samp].adc() ;
+	if (gain == 1) tE.data_[samp] = adc-mean ;
+	if (gain == 2) tE.data_[samp] = 2.*adc-mean ;
+	if (gain == 3) tE.data_[samp] = 12.*adc-mean ;
+	if (gain == 0) tE.data_[samp] = 12.*adc-mean ;
+      }
       tE.iphi_ = towid.iphi() ;
       tE.ieta_ = towid.ieta() ;
       mapTower[towid] = tE ;
     }
   }
+
 
   if (useEE_) {
     // Get EE xtal digi inputs
@@ -227,15 +254,15 @@ void EcalTPGAnalyzer::analyze(const edm::Event& iEvent, const  edm::EventSetup &
       }
     }
   }
-
+  
   // Get TP data
   edm::Handle<EcalTrigPrimDigiCollection> tp;
   iEvent.getByLabel(label_,producer_,tp);
-
+  
   for (unsigned int i=0;i<tp.product()->size();i++) {
     EcalTriggerPrimitiveDigi d = (*(tp.product()))[i];
     const EcalTrigTowerDetId TPtowid= d.id();
-
+    
     itTT = mapTower.find(TPtowid) ;
     if (itTT != mapTower.end()) {
       (itTT->second).tpgADC_ = d.compressedEt() ;
@@ -252,42 +279,70 @@ void EcalTPGAnalyzer::analyze(const edm::Event& iEvent, const  edm::EventSetup &
       mapTower[TPtowid] = tE ;
     }
   }
-
+  
   // Get Emulators TP
-   edm::Handle<EcalTrigPrimDigiCollection> tpEmul ;
-   iEvent.getByLabel(emul_label_, emul_producer_, tpEmul);
-   for (unsigned int i=0;i<tpEmul.product()->size();i++) {
-     EcalTriggerPrimitiveDigi d = (*(tpEmul.product()))[i];
-     const EcalTrigTowerDetId TPtowid= d.id();
-     itTT = mapTower.find(TPtowid) ;
-     if (itTT != mapTower.end())
-       for (int j=0 ; j<5 ; j++) (itTT->second).tpgEmul_[j] = (d[j].raw() & 0x1ff) ;
-     else {
-       towerEner tE ;
-       tE.iphi_ = TPtowid.iphi() ;
-       tE.ieta_ = TPtowid.ieta() ;
-       for (int j=0 ; j<5 ; j++) tE.tpgEmul_[j] = (d[j].raw() & 0x1ff) ;
-       mapTower[TPtowid] = tE ;
-     }
-   }
-
+  edm::Handle<EcalTrigPrimDigiCollection> tpEmul ;
+  iEvent.getByLabel(emul_label_, emul_producer_, tpEmul);
+  for (unsigned int i=0;i<tpEmul.product()->size();i++) {
+    EcalTriggerPrimitiveDigi d = (*(tpEmul.product()))[i];
+    const EcalTrigTowerDetId TPtowid= d.id();
+    itTT = mapTower.find(TPtowid) ;
+    if (itTT != mapTower.end())
+      for (int j=0 ; j<5 ; j++) (itTT->second).tpgEmul_[j] = (d[j].raw() & 0x1ff) ;
+    else {
+      towerEner tE ;
+      tE.iphi_ = TPtowid.iphi() ;
+      tE.ieta_ = TPtowid.ieta() ;
+      for (int j=0 ; j<5 ; j++) tE.tpgEmul_[j] = (d[j].raw() & 0x1ff) ;
+      mapTower[TPtowid] = tE ;
+    }
+  }
+  
   // fill histograms
+  fillShape(dfMax) ;
   for (itTT = mapTower.begin() ; itTT != mapTower.end() ; ++itTT ) {
     fillShape(itTT->second) ;
     fillOccupancyPlots(itTT->second) ;
     fillEnergyPlots(itTT->second) ;
     fillTPMatchPlots(itTT->second) ;
   }
-
+  
 }
 
+void EcalTPGAnalyzer::fillShape(EBDataFrame & df)
+{
+  float max = -999 ;
+  int gain, adc ;
+  float data ;
+  if (df[0].gainId() != 1 || df[1].gainId() != 1) return ; // first 2 samples must be in gain x12
+  float mean = 0.5*(df[0].adc()+df[1].adc()) ;
+  for (int i = 0 ; i<10 ; i++) {
+    gain = df[i].gainId() ;
+    adc = df[i].adc() ;
+    if (gain == 1) data = adc-mean ;
+    if (gain == 2) data = 2.*adc-mean ;
+    if (gain == 3) data = 12.*adc-mean ;
+    if (gain == 0) data = 12.*adc-mean ;
+    if (data>max) max = data ;
+  }
+  if (max>0. && max>=shapeCut_)
+    for (int i=0 ; i<10 ; i++) {
+      gain = df[i].gainId() ;
+      adc = df[i].adc() ;
+      if (gain == 1) data = adc-mean ;
+      if (gain == 2) data = 2.*adc-mean ;
+      if (gain == 3) data = 12.*adc-mean ;
+      if (gain == 0) data = 12.*adc-mean ;
+      shapeMax_->Fill(i, data/max) ;
+    }
+}
   
 void EcalTPGAnalyzer::fillShape(towerEner & t)
 {
   float max = 0. ;
   for (int i=0 ; i<10 ; i++) if (t.data_[i]>max) max = t.data_[i] ;
   if (max>0 && max>=shapeCut_)
-    for (int i=0 ; i<10 ; i++) shape_->Fill(float(i), t.data_[i]/max) ;
+    for (int i=0 ; i<10 ; i++) shape_->Fill(i, t.data_[i]/max) ;
 }
 
 void  EcalTPGAnalyzer::fillOccupancyPlots(towerEner & t)
