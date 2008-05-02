@@ -7,7 +7,7 @@
 #include "CaloOnlineTools/EcalTools/plugins/EcalChannelAnalyzer.h"
 #include "CaloOnlineTools/EcalTools/plugins/EcalPedHists.h"
 #include "CaloOnlineTools/EcalTools/plugins/EcalURecHitHists.h"
-#include "CaloOnlineTools/EcalTools/plugins/EcalSuperURecHitHists.h"
+#include "CaloOnlineTools/EcalTools/plugins/EcalCosmicsHists.h"
 #include "CaloOnlineTools/EcalTools/plugins/EcalTPGAnalyzer.h"
 
 
@@ -19,6 +19,6 @@ DEFINE_FWK_MODULE(EcalMipHists);
 DEFINE_FWK_MODULE(EcalChannelAnalyzer);
 DEFINE_FWK_MODULE(EcalPedHists);
 DEFINE_FWK_MODULE(EcalURecHitHists);
-DEFINE_FWK_MODULE(EcalSuperURecHitHists);
+DEFINE_FWK_MODULE(EcalCosmicsHists);
 DEFINE_FWK_MODULE(EcalTPGAnalyzer);
 

@@ -184,7 +184,7 @@ module ecalUncalibHit = ecalFixedAlphaBetaFitUncalibRecHit from "RecoLocalCalo/E
     replace ecalUncalibHit.EBdigiCollection = ecalEBunpacker:ebDigis
      replace ecalUncalibHit.EEdigiCollection = ecalEBunpacker:eeDigis
 
-    module ecalSuperURecHitHists = EcalSuperURecHitHists{
+    module ecalCosmicsHists = EcalCosmicsHists{
 
       InputTag EcalUncalibratedRecHitCollection = ecalUncalibHit:EcalUncalibRecHitsEB
       InputTag EBDigiCollection                   = ecalEBunpacker:ebDigis
@@ -209,7 +209,7 @@ module ecalUncalibHit = ecalFixedAlphaBetaFitUncalibRecHit from "RecoLocalCalo/E
       untracked string fileName =  '$data_file.$$.graph'
     }
 
-    path p = {ecalEBunpacker, ecalUncalibHit, ecalSuperURecHitHists}
+    path p = {ecalEBunpacker, ecalUncalibHit, ecalCosmicsHists}
 
 }
 

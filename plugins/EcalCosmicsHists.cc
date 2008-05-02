@@ -1,9 +1,9 @@
 // -*- C++ -*-
 //
-// Package:   EcalSuperURecHitHists 
-// Class:     EcalSuperURecHitHists  
+// Package:   EcalCosmicsHists 
+// Class:     EcalCosmicsHists  
 // 
-/**\class EcalSuperURecHitHists EcalSuperURecHitHists.cc
+/**\class EcalCosmicsHists EcalCosmicsHists.cc
 
  Description: <one line class summary>
 
@@ -12,7 +12,7 @@
 */
 
  
-#include "CaloOnlineTools/EcalTools/plugins/EcalSuperURecHitHists.h"
+#include "CaloOnlineTools/EcalTools/plugins/EcalCosmicsHists.h"
 #include "DataFormats/DetId/interface/DetId.h"
 #include "Geometry/CaloTopology/interface/CaloTopology.h"
 #include "Geometry/CaloEventSetup/interface/CaloTopologyRecord.h"
@@ -33,7 +33,7 @@ using namespace std;
 //
 // constructors and destructor
 //
-EcalSuperURecHitHists::EcalSuperURecHitHists(const edm::ParameterSet& iConfig) :
+EcalCosmicsHists::EcalCosmicsHists(const edm::ParameterSet& iConfig) :
   EcalUncalibratedRecHitCollection_ (iConfig.getParameter<edm::InputTag>("EcalUncalibratedRecHitCollection")),
   runNum_(-1),
   histRangeMax_ (iConfig.getUntrackedParameter<double>("histogramMaxRange",200.0)),
@@ -82,7 +82,7 @@ EcalSuperURecHitHists::EcalSuperURecHitHists(const edm::ParameterSet& iConfig) :
 }
 
 
-EcalSuperURecHitHists::~EcalSuperURecHitHists()
+EcalCosmicsHists::~EcalCosmicsHists()
 {
 }
 
@@ -93,7 +93,7 @@ EcalSuperURecHitHists::~EcalSuperURecHitHists()
 
 // ------------ method called to for each event  ------------
 void
-EcalSuperURecHitHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
+EcalCosmicsHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   int ievt = iEvent.id().event();
   auto_ptr<EcalElectronicsMapping> ecalElectronicsMap(new EcalElectronicsMapping);
@@ -111,11 +111,11 @@ EcalSuperURecHitHists::analyze(const edm::Event& iEvent, const edm::EventSetup& 
   {
     iEvent.getByLabel(EcalUncalibratedRecHitCollection_, hits);
     int neh = hits->size();
-    LogDebug("EcalSuperURecHitHists") << "event " << ievt << " hits collection size " << neh;
+    LogDebug("EcalCosmicsHists") << "event " << ievt << " hits collection size " << neh;
   }
   catch ( exception& ex)
   {
-    LogWarning("EcalSuperURecHitHists") << EcalUncalibratedRecHitCollection_ << " not available";
+    LogWarning("EcalCosmicsHists") << EcalUncalibratedRecHitCollection_ << " not available";
   }
   
   ESHandle<CaloTopology> caloTopo;
@@ -143,21 +143,21 @@ EcalSuperURecHitHists::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     result = find(maskedFEDs_.begin(), maskedFEDs_.end(), FEDid);
     if(result != maskedFEDs_.end())
     {
-      LogWarning("EcalSuperURecHitHists") << "skipping uncalRecHit for masked FED " << FEDid << " ; amplitude " << ampli;
+      LogWarning("EcalCosmicsHists") << "skipping uncalRecHit for masked FED " << FEDid << " ; amplitude " << ampli;
       continue;
     }      
 
     result = find(maskedChannels_.begin(), maskedChannels_.end(), hashedIndex);
     if  (result != maskedChannels_.end())
     {
-      LogWarning("EcalSuperURecHitHists") << "skipping masked uncalRecHit for channel: " << ic << " with amplitude " << ampli ;
+      LogWarning("EcalCosmicsHists") << "skipping masked uncalRecHit for channel: " << ic << " with amplitude " << ampli ;
       continue;
     }
 	
     result = find(usedChannels_.begin(), usedChannels_.end(), hashedIndex);
     if  (result != usedChannels_.end())
     {
-      LogWarning("EcalSuperURecHitHists") << "skipping used uncalRecHit for channel: " << ic << " with amplitude " << ampli ;
+      LogWarning("EcalCosmicsHists") << "skipping used uncalRecHit for channel: " << ic << " with amplitude " << ampli ;
       continue;
     }
     std::cout << " this one is good " << hashedIndex << " SM " <<ebDet.ism() << " ic " << ic << std::endl;
@@ -214,7 +214,7 @@ EcalSuperURecHitHists::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     int iphiSM = ebDet.iphiSM();
 
     // print out some info
-    LogWarning("EcalSuperURecHitHists") << "hit! " << " amp " << ampli  << " : " 
+    LogWarning("EcalCosmicsHists") << "hit! " << " amp " << ampli  << " : " 
 					<< fedMap_->getSliceFromFed(FEDid) 
 					<< " : ic " <<  ic << " : hashedIndex " << hashedIndex 
 					<< " : ieta " << ieta << " iphi " << iphi 
@@ -305,7 +305,7 @@ EcalSuperURecHitHists::analyze(const edm::Event& iEvent, const edm::EventSetup& 
 
 
 // insert the hist map into the map keyed by FED number
-void EcalSuperURecHitHists::initHists(int FED)
+void EcalCosmicsHists::initHists(int FED)
 {
   using namespace std;
   
@@ -383,7 +383,7 @@ void EcalSuperURecHitHists::initHists(int FED)
 
 // ------------ method called once each job just before starting event loop  ------------
 void 
-EcalSuperURecHitHists::beginJob(const edm::EventSetup&)
+EcalCosmicsHists::beginJob(const edm::EventSetup&)
 {
   //Here I will init some of the specific histograms
   int numBins = (int)round(histRangeMax_-histRangeMin_)+1;
@@ -412,7 +412,7 @@ EcalSuperURecHitHists::beginJob(const edm::EventSetup&)
 
 // ------------ method called once each job just after ending the event loop  ------------
 void 
-EcalSuperURecHitHists::endJob()
+EcalCosmicsHists::endJob()
 {
   using namespace std;
   fileName_ += "-"+intToString(runNum_)+".graph.root";
@@ -431,7 +431,7 @@ EcalSuperURecHitHists::endJob()
       hist->Write();
     else
     {
-      cerr << "EcalSuperURecHitHists: Error: This shouldn't happen!" << endl;
+      cerr << "EcalCosmicsHists: Error: This shouldn't happen!" << endl;
     }
     // Write out timing hist
     hist = FEDsAndTimingHists_[itr->first];
@@ -439,7 +439,7 @@ EcalSuperURecHitHists::endJob()
       hist->Write();
     else
     {
-      cerr << "EcalSuperURecHitHists: Error: This shouldn't happen!" << endl;
+      cerr << "EcalCosmicsHists: Error: This shouldn't happen!" << endl;
     }
 	
 	hist = FEDsAndFrequencyHists_[itr->first];
@@ -515,14 +515,14 @@ EcalSuperURecHitHists::endJob()
     channels+=",";
   }
   
-  LogWarning("EcalSuperURecHitHists") << "Masked channels are: " << channels << " and that is all!";
+  LogWarning("EcalCosmicsHists") << "Masked channels are: " << channels << " and that is all!";
 
-  LogWarning("EcalSuperURecHitHists") << "---> Number of cosmic events: " << cosmicCounter_ << " in " << naiveEvtNum_ << " events.";
+  LogWarning("EcalCosmicsHists") << "---> Number of cosmic events: " << cosmicCounter_ << " in " << naiveEvtNum_ << " events.";
 
 }
 
 
-std::string EcalSuperURecHitHists::intToString(int num)
+std::string EcalCosmicsHists::intToString(int num)
 {
     using namespace std;
     ostringstream myStream;

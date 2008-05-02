@@ -1,4 +1,4 @@
-module ecalSuperURecHitHists = EcalSuperURecHitHists{
+module ecalCosmicsHists = EcalCosmicsHists{
 
       InputTag EcalUncalibratedRecHitCollection = ecalUncalibHit:EcalUncalibRecHitsEB
       InputTag EBDigiCollection                   = ecalEBunpacker:ebDigis
@@ -20,7 +20,7 @@ module ecalSuperURecHitHists = EcalSuperURecHitHists{
       #untracked double histogramMinRange = -10.0
 
       # parameter for the name of the output root file with TH1F
-      untracked string fileName = 'ecalSuperURecHitHists'
+      untracked string fileName = 'EcalCosmicsHists'
 
       # parameter to specify minimum seed amplitude (ADC)
       untracked double MinSeedAmp = 5.0

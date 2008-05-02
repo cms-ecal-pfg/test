@@ -1,9 +1,9 @@
 // -*- C++ -*-
 //
-// Package:   EcalSuperURecHitHists 
-// Class:     EcalSuperURecHitHists 
+// Package:   EcalCosmicsHists 
+// Class:     EcalCosmicsHists 
 // 
-/**\class EcalSuperURecHitHists EcalSuperURecHitHists.cc
+/**\class EcalCosmicsHists EcalCosmicsHists.cc
 
  Description: <one line class summary>
 
@@ -54,10 +54,10 @@
 // class declaration
 //
 
-class EcalSuperURecHitHists : public edm::EDAnalyzer {
+class EcalCosmicsHists : public edm::EDAnalyzer {
    public:
-      explicit EcalSuperURecHitHists(const edm::ParameterSet&);
-      ~EcalSuperURecHitHists();
+      explicit EcalCosmicsHists(const edm::ParameterSet&);
+      ~EcalCosmicsHists();
 
 
    private:
