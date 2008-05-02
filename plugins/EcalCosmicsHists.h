@@ -69,19 +69,20 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
 
     // ----------member data ---------------------------
 
-  edm::InputTag EcalUncalibratedRecHitCollection_;
+  edm::InputTag ecalRecHitCollection_;
+  edm::InputTag barrelClusterCollection_;
+  edm::InputTag endcapClusterCollection_;
+  
+  
   int runNum_;
   double histRangeMax_, histRangeMin_;
   double minSeedAmp_;
   double minTimingAmp_;
   std::string fileName_;
   
-  std::vector<int> maskedChannels_;
-  std::vector<int> maskedFEDs_;
-  std::vector<std::string> maskedEBs_;
   std::map<int,TH1F*> FEDsAndHists_;
   std::map<int,TH1F*> FEDsAndE2Hists_;
-  std::map<int,TH1F*> FEDsAndE9Hists_;
+  std::map<int,TH1F*> FEDsAndenergyHists_;
   std::map<int,TH1F*> FEDsAndTimingHists_;
   std::map<int,TH1F*> FEDsAndFrequencyHists_;
   std::map<int,TH1F*> FEDsAndiPhiProfileHists_;
@@ -90,14 +91,14 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
   std::map<int,TH2F*> FEDsAndTimingVsFreqHists_;
   std::map<int,TH2F*> FEDsAndTimingVsAmpHists_;
   std::map<int,TH2F*> FEDsAndE2vsE1Hists_;
-  std::map<int,TH2F*> FEDsAndE9vsE1Hists_;
+  std::map<int,TH2F*> FEDsAndenergyvsE1Hists_;
   std::map<int,TH2F*> FEDsAndOccupancyHists_;  
   std::map<int,TH2F*> FEDsAndTimingVsPhiHists_;  
   std::map<int,TH2F*> FEDsAndTimingVsModuleHists_;  
 
   TH1F* allFedsHist_;
   TH1F* allFedsE2Hist_;
-  TH1F* allFedsE9Hist_;
+  TH1F* allFedsenergyHist_;
   TH1F* allFedsTimingHist_;
   TH1F* allFedsFrequencyHist_;
   TH1F* allFedsiPhiProfileHist_;
@@ -107,7 +108,7 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
   TH1F* numberofGoodEvtFreq_;
 
   TH2F* allFedsE2vsE1Hist_;
-  TH2F* allFedsE9vsE1Hist_;
+  TH2F* allFedsenergyvsE1Hist_;
   TH2F* allOccupancy_; //New file to do eta-phi occupancy
   TH2F* allOccupancyCoarse_; //New file to do eta-phi occupancy
   TH2F* allFedsTimingVsFreqHist_;
@@ -117,9 +118,9 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
   TH2F* allFedsTimingPhiEbmHist_;
   TH3F* allFedsTimingPhiEtaHist_;
 
+  EcalFedMap* fedMap_;
 
   TFile* file;
-  EcalFedMap* fedMap_;
 
   double minCosmicE1_;
   double minCosmicE2_;

@@ -184,10 +184,23 @@ module ecalUncalibHit = ecalFixedAlphaBetaFitUncalibRecHit from "RecoLocalCalo/E
     replace ecalUncalibHit.EBdigiCollection = ecalEBunpacker:ebDigis
      replace ecalUncalibHit.EEdigiCollection = ecalEBunpacker:eeDigis
 
+	 include "RecoLocalCalo/EcalRecProducers/data/ecalRecHit.cfi"
+   replace ecalRecHit.EBuncalibRecHitCollection = ecalUncalibHit:EcalUncalibRecHitsEB
+   replace ecalRecHit.EEuncalibRecHitCollection = ecalUncalibHit:EcalUncalibRecHitsEE
+   
+	    # geometry needed for clustering
+   include "RecoEcal/EgammaClusterProducers/data/geometryForClustering.cff"
+
+   # FixedMatrix clusters 
+   include "RecoEcal/EgammaClusterProducers/data/cosmicClusteringSequence.cff"
+   
     module ecalCosmicsHists = EcalCosmicsHists{
 
-      InputTag EcalUncalibratedRecHitCollection = ecalUncalibHit:EcalUncalibRecHitsEB
+      InputTag ecalRecHitCollection = ecalRecHit:EcalRecHitsEB
       InputTag EBDigiCollection                   = ecalEBunpacker:ebDigis
+	  
+  InputTag endcapClusterCollection      = cosmicBasicClusters:CosmicEndcapBasicClusters
+      InputTag barrelClusterCollection      = cosmicBasicClusters:CosmicBarrelBasicClusters
 
       # use hashed index to mask channels
       # add a simple description of hashIndex (hhahhahhh...)
@@ -209,7 +222,7 @@ module ecalUncalibHit = ecalFixedAlphaBetaFitUncalibRecHit from "RecoLocalCalo/E
       untracked string fileName =  '$data_file.$$.graph'
     }
 
-    path p = {ecalEBunpacker, ecalUncalibHit, ecalCosmicsHists}
+    path p = {ecalEBunpacker, ecalUncalibHit, ecalRecHit, cosmicClusteringSequence, ecalCosmicsHists}
 
 }
 

@@ -1,7 +1,10 @@
 module ecalCosmicsHists = EcalCosmicsHists{
 
-      InputTag EcalUncalibratedRecHitCollection = ecalUncalibHit:EcalUncalibRecHitsEB
-      InputTag EBDigiCollection                   = ecalEBunpacker:ebDigis
+      InputTag ecalRecHitCollection = ecalRecHit:EcalRecHitsEB
+	  
+	  InputTag endcapClusterCollection      = cosmicBasicClusters:CosmicEndcapBasicClusters
+      InputTag barrelClusterCollection      = cosmicBasicClusters:CosmicBarrelBasicClusters
+	  
 
       # use hash index to mask channels
       # add a simple description of hashIndex (hhahhahhh...)
