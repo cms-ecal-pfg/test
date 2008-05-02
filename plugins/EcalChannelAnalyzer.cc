@@ -84,7 +84,7 @@ EcalChannelAnalyzer::EcalChannelAnalyzer(const edm::ParameterSet& iConfig)
 	if (t_==0) std::cout << "no tree" << std::endl; 
 
 	t_->SetBranchAddress("ic", &ic, &b_ic);
-	t_->SetBranchAddress("ism", &ism, &b_ism);
+	t_->SetBranchAddress("slice", slice, &b_slice);
 	t_->SetBranchAddress("ieta", &ieta, &b_ieta);
 	t_->SetBranchAddress("iphi", &iphi, &b_iphi);
 	t_->SetBranchAddress("hashedIndex", &hashedIndex, &b_hashedIndex);
@@ -154,7 +154,7 @@ EcalChannelAnalyzer::beginJob(const edm::EventSetup&)
 		t_->GetEntry(totalEventList_.GetEntry(j));
 		//dirty trick with enum + implicit converter 
 		for (unsigned int i=0; i<EcalChannelAnalyzer::NTYPES; i++) {
-			writeHistFromFile(hashedIndex, ism, ic, (EcalChannelAnalyzer::n_h1Type)i);
+			writeHistFromFile(hashedIndex, slice, ic, (EcalChannelAnalyzer::n_h1Type)i);
 		} 
 
 	}
@@ -198,7 +198,7 @@ EcalChannelAnalyzer::endJob()
 
 		edm::LogVerbatim("") << "Event List for cut: " <<  v_eventList_[i].GetTitle();
 
-		edm::LogVerbatim("") << "ism" << "\t" 
+		edm::LogVerbatim("") << "slice" << "\t" 
 			<< "ic     " << "\t" 
 			<< "hi     " << "\t" 
 			<< "ieta   " << "\t" 
@@ -221,7 +221,7 @@ EcalChannelAnalyzer::endJob()
 
 			//sorry for the awkward formatting of columns...
 
-			edm::LogVerbatim("") << ism << "\t" 
+			edm::LogVerbatim("") << slice << "\t" 
 				<< ic << "\t" 
 				<< hashedIndex << "\t" 
 				<< ieta << "\t" 
@@ -244,8 +244,8 @@ EcalChannelAnalyzer::endJob()
 
 	edm::LogVerbatim("") << "Event List for all cuts";
 
-                edm::LogVerbatim("") << "ism" << "\t"
-                        << "ic     " << "\t"
+                edm::LogVerbatim("") << "slice" << "\t"
+                        << "slice     " << "\t"
                         << "hi     " << "\t"    
                         << "ieta   " << "\t"
                         << "iphi   " << "\t"
@@ -266,7 +266,7 @@ EcalChannelAnalyzer::endJob()
 		t_->GetEntry(totalEventList_.GetEntry(j));
 
 
-                        edm::LogVerbatim("") << ism << "\t"
+                        edm::LogVerbatim("") << slice << "\t"
                                 << ic << "\t"
                                 << hashedIndex << "\t"
                                 << ieta << "\t"
@@ -339,7 +339,7 @@ void EcalChannelAnalyzer::fillEventListVector(const std::vector<std::string> & v
 
 }
 
-void EcalChannelAnalyzer::writeHistFromFile (const int hashedIndex, const int ism, const int ic, const EcalChannelAnalyzer::n_h1Type H1_TYPE) {
+void EcalChannelAnalyzer::writeHistFromFile (const int hashedIndex, const char* slice, const int ic, const EcalChannelAnalyzer::n_h1Type H1_TYPE) {
 
 
 	//getting histogram from input file
@@ -349,8 +349,8 @@ void EcalChannelAnalyzer::writeHistFromFile (const int hashedIndex, const int is
 
 	//name: ism_ic_typeOfHistogram_bitmask
 	//title: ism_ic_typeOfHistogram:cut1:cut2
-	std::string histName = intToString(ism) + "_" + intToString(ic) + "_" + h1TypeToNameMap_[H1_TYPE] + "_" + printBitmask(xtalBitmask_[hashedIndex]); 
-	std::string histTitle = intToString(ism) + "_" + intToString(ic) + "_" + h1TypeToNameMap_[H1_TYPE] + printBitmaskCuts(xtalBitmask_[hashedIndex]); 
+	std::string histName = std::string(slice) + "_" + intToString(ic) + "_" + h1TypeToNameMap_[H1_TYPE] + "_" + printBitmask(xtalBitmask_[hashedIndex]); 
+	std::string histTitle = std::string(slice) + "_" + intToString(ic) + "_" + h1TypeToNameMap_[H1_TYPE] + printBitmaskCuts(xtalBitmask_[hashedIndex]); 
 	hist->SetName(histName.c_str());
 	hist->SetTitle(histTitle.c_str());
 
@@ -358,6 +358,8 @@ void EcalChannelAnalyzer::writeHistFromFile (const int hashedIndex, const int is
 	fout_->cd();
 	hist->Write();
 
+        //debug
+        std::cout << "writing: " << histTitle << std::endl;
 }
 
 std::string EcalChannelAnalyzer::intToString(int num)

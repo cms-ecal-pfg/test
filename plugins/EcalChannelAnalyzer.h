@@ -64,7 +64,7 @@ class EcalChannelAnalyzer : public edm::EDAnalyzer {
 		std::string printBitmaskCuts(std::vector<bool> * bitmask);
 		void initHistTypeMaps();
 		void fillEventListVector(const std::vector<std::string>& v_cuts);   	
-		void writeHistFromFile(int hashedIndex, int ism, int ic, n_h1Type H1TYPE); 
+		void writeHistFromFile(int hashedIndex, const char* slice, int ic, n_h1Type H1TYPE); 
 
 		// ----------member data --------------------------
 
@@ -100,7 +100,7 @@ class EcalChannelAnalyzer : public edm::EDAnalyzer {
 
 		//tree variables
 		int	ic;
-		int     ism;
+                char    slice[5];
 		int     ieta;
 		int     iphi;
 		int     hashedIndex;
@@ -117,7 +117,7 @@ class EcalChannelAnalyzer : public edm::EDAnalyzer {
 
 		//branches
 		TBranch        *b_ic;   //!
-		TBranch        *b_ism;   //!
+		TBranch        *b_slice;   //!
 		TBranch        *b_ieta;   //!
 		TBranch        *b_iphi;   //!
 		TBranch        *b_hashedIndex;   //!

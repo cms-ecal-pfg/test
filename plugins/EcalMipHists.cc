@@ -58,6 +58,8 @@ EcalMipHists::EcalMipHists(const edm::ParameterSet& iConfig) :
   }
   //making sure that hists keep track of overflows
   TH1::StatOverflows(1);
+
+  fedMap_ = new EcalFedMap();
 }
 
 EcalMipHists::~EcalMipHists()
@@ -105,14 +107,17 @@ EcalMipHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     EBDetId ebDetId = hitItr->id();
     int xtal_hashed = ebDetId.hashedIndex();
     double jitter = hitItr->jitter();
+    jitter+=5;  //Caterina's definition--index of max amp. sample
     double amplitude = hitItr->amplitude();
+    //debug
+    //cout << "crystal hash:" << xtal_hashed << " jitter:" << jitter << " ampli:" << amplitude << endl;
     
     //----------------XTALS ampli/jitter
 
     //booking jitter histograms
     if (!v_h1_XtalJitter_[xtal_hashed]) {
       //TFileDirectory::make histogram if it has never been booked before
-      v_h1_XtalJitter_[xtal_hashed] = XtalJitterDir_.make<TH1F> (intToString(xtal_hashed).c_str(),intToString(xtal_hashed).c_str(),11,0,11);
+      v_h1_XtalJitter_[xtal_hashed] = XtalJitterDir_.make<TH1D> (intToString(xtal_hashed).c_str(),intToString(xtal_hashed).c_str(),11,0,11);
       //being paranoid about overflows
       v_h1_XtalJitter_[xtal_hashed]->StatOverflows(1);
       //being paranoid about pointers (but not really doing much)
@@ -125,7 +130,7 @@ EcalMipHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
     //amplitude
     if (!v_h1_XtalAmpli_[xtal_hashed]) {
-      v_h1_XtalAmpli_[xtal_hashed] = XtalAmpliDir_.make<TH1F> (intToString(xtal_hashed).c_str(),intToString(xtal_hashed).c_str(),500,0,500);
+      v_h1_XtalAmpli_[xtal_hashed] = XtalAmpliDir_.make<TH1D> (intToString(xtal_hashed).c_str(),intToString(xtal_hashed).c_str(),500,0,500);
       v_h1_XtalAmpli_[xtal_hashed]->StatOverflows(1);
       if (!v_h1_XtalAmpli_[xtal_hashed]) std::cout << "TFileService (xtal ampli) had a problem and you will have a problem soon (segfault)" << std::endl;
     }
@@ -191,7 +196,7 @@ EcalMipHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     //std::cout << "pedestal=" << pedestal << std::endl;
 
     if (!v_h1_XtalPed_[xtal_hashed]) {
-      v_h1_XtalPed_[xtal_hashed] = XtalPedDir_.make<TH1F> (intToString(xtal_hashed).c_str(),intToString(xtal_hashed).c_str(),1000,0,1000);
+      v_h1_XtalPed_[xtal_hashed] = XtalPedDir_.make<TH1D> (intToString(xtal_hashed).c_str(),intToString(xtal_hashed).c_str(),1000,0,1000);
       v_h1_XtalPed_[xtal_hashed]->StatOverflows(1);
       if (!v_h1_XtalPed_[xtal_hashed]) std::cout << "TFileService (xtals ped) had a problem and you will have a problem soon (segfault)" << std::endl;
     }
@@ -266,11 +271,11 @@ EcalMipHists::makeTree()
 
   //creating file-resident tree (scared of how it's going to be handled...)
   //TODO: find a better name
-  TTree tree_xtal;
+  TTree tree_xtal("xtal_tree","crystalTree");
 
   //variables
   int ic;
-  int ism;
+  char slice[5];
   int ieta;
   int iphi;
   int entries;
@@ -284,7 +289,7 @@ EcalMipHists::makeTree()
   float ampli_fracBelowThreshold;
 
   tree_xtal.Branch("ic" , &ic, "ic/I");
-  tree_xtal.Branch("ism" , &ism, "ism/I");
+  tree_xtal.Branch("slice", slice, "slice/C");
   tree_xtal.Branch("ieta" , &ieta, "ieta/I");
   tree_xtal.Branch("iphi" , &iphi, "iphi/I");
   tree_xtal.Branch("hashedIndex" , &hashedIndex, "hashedIndex/I");
@@ -306,7 +311,8 @@ EcalMipHists::makeTree()
 
     EBDetId detId = EBDetId::unhashIndex(i);
     ic = detId.ic();
-    ism = detId.ism();
+    EcalElectronicsId elecId = ecalElectronicsMap_->getElectronicsId(detId);
+    strcpy(slice,(fedMap_->getSliceFromFed(600+elecId.dccId())).c_str());
     ieta = detId.ieta();
     iphi = detId.iphi();
     hashedIndex = detId.hashedIndex(); //TODO: check it is i

@@ -45,11 +45,13 @@
 #include "TH1.h"
 #include "TH1F.h"
 #include "TH2F.h"
+#include "TH2D.h"
 #include "TProfile2D.h"
 #include "TProfile.h"
 
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "PhysicsTools/UtilAlgos/interface/TFileService.h"
+#include "CaloOnlineTools/EcalTools/interface/EcalFedMap.h"
 
 //
 // class declaration
@@ -73,17 +75,18 @@ private:
 	edm::InputTag EBUncalibratedRecHitCollection_;
 	edm::InputTag headerProducer_;
         const EcalElectronicsMapping* ecalElectronicsMap_;
+        EcalFedMap* fedMap_;
 
 	//histograms - for each quantity, one 2d map and one vector of crystal histogram 
 	
 	TProfile2D * prof2_XtalJitter_;
-	TH1F  * v_h1_XtalJitter_[61200];
+	TH1D* v_h1_XtalJitter_[61200];
 
 	TProfile2D * prof2_XtalAmpli_;
-	TH1F  * v_h1_XtalAmpli_[61200];
+	TH1D* v_h1_XtalAmpli_[61200];
 
 	TProfile2D * prof2_XtalPed_;
-	TH1F  * v_h1_XtalPed_[61200];
+	TH1D* v_h1_XtalPed_[61200];
 
 	//for jitter: vector of crystal profiles
         TProfile * v_prof_XtalPulse_[61200];
