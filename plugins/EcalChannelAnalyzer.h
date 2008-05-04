@@ -62,8 +62,13 @@ class EcalChannelAnalyzer : public edm::EDAnalyzer {
 		std::string intToString(int num);
 		std::string printBitmask(std::vector<bool> * bitmask);
 		std::string printBitmaskCuts(std::vector<bool> * bitmask);
+		std::string makeCutFromMaskedVectorInt(const std::vector<int> & v_masked, const std::string & type);
+		std::string makeCutFromMaskedVectorString(const std::vector<std::string> & v_masked, const std::string & type);
 		void initHistTypeMaps();
-		void fillEventListVector(const std::vector<std::string>& v_cuts);   	
+		void fillEventListVector(const std::vector<std::string>& v_cuts, const std::vector<std::string> & v_masked);   	
+		void printLogEventList(const TEventList & eventList);
+		void printMaskedHi();
+		void printMaskedSlices();
 		void writeHistFromFile(int hashedIndex, const char* slice, int ic, n_h1Type H1TYPE); 
 
 		// ----------member data --------------------------
@@ -79,6 +84,9 @@ class EcalChannelAnalyzer : public edm::EDAnalyzer {
 		//vectors for cuts/event lists
 		std::vector<std::string> v_cuts_;
 		std::vector <TEventList> v_eventList_;
+		std::vector <int> v_maskedHi_;
+		std::vector <std::string> v_maskedSlices_;
+
 		//total TEventList (no duplicate crystals)
 		TEventList totalEventList_;
 

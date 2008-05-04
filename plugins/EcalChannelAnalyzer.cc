@@ -38,7 +38,9 @@ EcalChannelAnalyzer::EcalChannelAnalyzer(const edm::ParameterSet& iConfig)
 	:inputTreeFileName_ (iConfig.getUntrackedParameter<std::string>("inputTreeFileName","")),
 	inputHistoFileName_(iConfig.getUntrackedParameter<std::string>("inputHistoFileName","")),
 	outputFileName_(iConfig.getUntrackedParameter<std::string>("outputFileName","")),
-	v_cuts_ (iConfig.getUntrackedParameter< std::vector<std::string> >  ("v_cuts") )
+	v_cuts_ (iConfig.getUntrackedParameter< std::vector<std::string> >  ("v_cuts") ),
+	v_maskedHi_(iConfig.getUntrackedParameter < std::vector<int> > ("v_maskedHi") ),
+	v_maskedSlices_(iConfig.getUntrackedParameter < std::vector<std::string> > ("v_maskedSlices") )
 
 {
 	//--- INITIALIZATIONS 
@@ -76,7 +78,6 @@ EcalChannelAnalyzer::EcalChannelAnalyzer(const edm::ParameterSet& iConfig)
 	//--- INIT TREE
 
 	//TODO:name of tree from .cfg + try/catch
-
 
 	t_=(TTree*)fin_tree_->Get("xtal_tree");
 
@@ -125,10 +126,19 @@ EcalChannelAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 EcalChannelAnalyzer::beginJob(const edm::EventSetup&)
 {
 
+	//preparing TCuts for masking purposes
+	//note: I cowardly refuse to template this function, but if it's a good idea I will.
+	std::string maskedHi = makeCutFromMaskedVectorInt(v_maskedHi_, "hashedIndex");
+	std::string maskedSlices = makeCutFromMaskedVectorString(v_maskedSlices_, "slice");
+
+	std::vector<std::string> v_masked;
+	if (maskedHi!="") v_masked.push_back(maskedHi);
+	if (maskedSlices!="") v_masked.push_back(maskedSlices);
+
 	//filling event list vector with lists produced by cuts
 	//by construction, list made from cut in v_cuts_[i] is in v_eventList_[i] 
 
-	fillEventListVector(v_cuts_);
+	fillEventListVector(v_cuts_,v_masked);
 
 	//loop on all event lists 
 	for (unsigned int i=0; i<v_eventList_.size(); i++){
@@ -169,25 +179,26 @@ EcalChannelAnalyzer::endJob()
 {
 
 	//printouts
-
 	edm::LogVerbatim("") << "------ORDERED LIST OF CUTS-----"; 
 
 	for (unsigned int i=0; i<v_eventList_.size(); ++i){
-		 edm::LogVerbatim("")  << i << ". " << v_eventList_[i].GetTitle() << std::endl; 
+		edm::LogVerbatim("")  << i << ". " << v_cuts_[i]; 
 	}
 
-	/*std::cout << "------LISTS FOR SINGLE CUTS-----" << std::endl;
+	edm::LogVerbatim("") << "------MASKED-----";
 
-	for (unsigned int i=0; i<v_eventList_.size(); i++){
-		std::cout << v_eventList_[i].GetTitle() << std::endl; 
-		t_->SetEventList(&v_eventList_[i]);
-		t_->Scan();
-	}
+	printMaskedHi();
+	printMaskedSlices();
 
-	std::cout << "------ALL CRYSTALS-----" << std::endl;
+	edm::LogVerbatim("") << "------EVENT LISTS-----";
 
-	t_->SetEventList(&totalEventList_);
-	t_->Scan();*/
+	/*for (unsigned int i=0; i<v_eventList_.size(); i++){
+	  std::cout << v_eventList_[i].GetTitle() << std::endl; 
+	  t_->SetEventList(&v_eventList_[i]);
+	  t_->Scan();
+	  }
+	  t_->SetEventList(&totalEventList_);
+	  t_->Scan();*/
 
 
 	//----DIRTY HACK UNTIL THINGS ARE FIXED WITH ROOT OSTREAMS and above loops can be used
@@ -196,100 +207,17 @@ EcalChannelAnalyzer::endJob()
 	for (unsigned int i=0; i<v_eventList_.size(); i++){
 		//loop on events in event lists
 
-		edm::LogVerbatim("") << "Event List for cut: " <<  v_eventList_[i].GetTitle();
-
-		edm::LogVerbatim("") << "slice" << "\t" 
-			<< "ic     " << "\t" 
-			<< "hi     " << "\t" 
-			<< "ieta   " << "\t" 
-			<< "iphi   " << "\t" 
-			<< "amp_avg" << "\t" 
-			<< "amp_rms" << "\t"
-			<< "ped_avg" << "\t" 
-			<< "ped_rms" << "\t"
-			<< "jit_avg" << "\t"
-			<< "jit_rms" << "\t"
-			<< "fracAmp" << "\t"
-			<< "entries" << "\t"
-			<< "fracEnt" << "\t"
-			<< "failed " << "\t" ;
-
-
-		for (unsigned int j=0; j<(unsigned int)v_eventList_[i].GetN(); j++) {
-
-			t_->GetEntry(v_eventList_[i].GetEntry(j));
-
-			//sorry for the awkward formatting of columns...
-
-			edm::LogVerbatim("") << slice << "\t" 
-				<< ic << "\t" 
-				<< hashedIndex << "\t" 
-				<< ieta << "\t" 
-				<< iphi << "\t" 
-				<< std::setprecision(3) << ampli_avg << "\t" 
-				<< std::setprecision(3) << ampli_rms << "\t"
-				<< std::setprecision(3) << ped_avg << "\t" 
-				<< std::setprecision(3) << ped_rms << "\t"
-				<< std::setprecision(3) << jitter_avg << "\t"
-				<< std::setprecision(3) << jitter_rms <<  "\t"
-                                << std::setprecision(3) << ampli_fracBelowThreshold << "\t"
-				<< std::setprecision(6) << entries << "\t"
-				<< std::setprecision(3) << entriesOverAvg << "\t"
-				<< printBitmaskCuts(xtalBitmask_[hashedIndex]); 
-
-		}
+		edm::LogVerbatim("") << "Event List for cut: " <<  v_cuts_[i];
+		printLogEventList(v_eventList_[i]);
 
 	}
+
 	//event list for all cuts
-
 	edm::LogVerbatim("") << "Event List for all cuts";
-
-                edm::LogVerbatim("") << "slice" << "\t"
-                        << "slice     " << "\t"
-                        << "hi     " << "\t"    
-                        << "ieta   " << "\t"
-                        << "iphi   " << "\t"
-                        << "amp_avg" << "\t"  
-                        << "amp_rms" <<  "\t"
-                        << "ped_avg" << "\t"
-                        << "ped_rms" << "\t"
-                        << "jit_avg" <<  "\t"
-                        << "jit_rms" <<  "\t"
-                        << "fracAmp" << "\t"
-                        << "entries" << "\t"
-                        << "fracEnt" << "\t"
-                        << "failed " << "\t" ;
-
-
-	for (unsigned int j=0; j<(unsigned int)totalEventList_.GetN(); j++) {
-
-		t_->GetEntry(totalEventList_.GetEntry(j));
-
-
-                        edm::LogVerbatim("") << slice << "\t"
-                                << ic << "\t"
-                                << hashedIndex << "\t"
-                                << ieta << "\t"
-                                << iphi << "\t"
-                                << std::setprecision(3) << ampli_avg << "\t"
-                                << std::setprecision(3) << ampli_rms << "\t"
-                                << std::setprecision(3) << ped_avg << "\t"
-                                << std::setprecision(3) << ped_rms << "\t"
-                                << std::setprecision(3) << jitter_avg << "\t"
-                                << std::setprecision(3) << jitter_rms <<  "\t"
-                                << std::setprecision(3) << ampli_fracBelowThreshold << "\t"
-                                << std::setprecision(6) << entries << "\t"
-                                << std::setprecision(3) << entriesOverAvg << "\t"
-                                << printBitmaskCuts(xtalBitmask_[hashedIndex]);
-
-
-
-
-	}
+	printLogEventList(totalEventList_);
 
 
 	//---END DIRTY HACK
-
 
 	//cleanup
 	for (unsigned int i=0; i<MAX_XTALS; i++) {
@@ -301,8 +229,85 @@ EcalChannelAnalyzer::endJob()
 	fout_->Close();
 }
 
+//-------------- "helper" methods ----------------
 
-//-------------- "helper" methods -----------------
+void EcalChannelAnalyzer::printMaskedHi() {
+
+	edm::LogVerbatim("") << "Masked crystals (hashedIndex)"; 
+	std::string bufferString;
+
+	if (v_maskedHi_.size()==0) edm::LogVerbatim("") << "no masked crystals";
+
+	else {
+		for (unsigned int i=0; i<v_maskedHi_.size(); i++) {
+			bufferString = bufferString + intToString(v_maskedHi_[i]) + "\t";
+			if(i!=0 && i%10==0) bufferString += "\n";
+		}
+		edm::LogVerbatim("") << bufferString;
+	}
+}
+
+
+void EcalChannelAnalyzer::printMaskedSlices() {
+
+	edm::LogVerbatim("") << "Masked slices (sm)";     
+	std::string bufferString;
+
+	if (v_maskedSlices_.size()==0) edm::LogVerbatim("") << "no masked slices";
+
+	else {
+		for (unsigned int i=0; i<v_maskedSlices_.size(); i++) {
+			bufferString = bufferString + v_maskedSlices_[i] + "\t";
+			if(i%10==0) bufferString += "\n";
+		}
+		edm::LogVerbatim("") << bufferString;
+	}
+}
+
+
+void EcalChannelAnalyzer::printLogEventList(const TEventList & eventList) {
+
+	edm::LogVerbatim("") << "slice" << "\t"
+		<< "ic     " << "\t"    
+		<< "hi     " << "\t"    
+		<< "ieta   " << "\t"
+		<< "iphi   " << "\t"
+		<< "amp_avg" << "\t"
+		<< "amp_rms" <<  "\t"
+		<< "ped_avg" << "\t"
+		<< "ped_rms" << "\t"
+		<< "jit_avg" <<  "\t"
+		<< "jit_rms" <<  "\t"
+		<< "fracAmp" << "\t"
+		<< "entries" << "\t"
+		<< "fracEnt" << "\t"
+		<< "failed " << "\t" ;
+
+	for (unsigned int j=0; j<(unsigned int)eventList.GetN(); j++) {
+
+		t_->GetEntry(eventList.GetEntry(j));
+
+		edm::LogVerbatim("") << slice << "\t"
+			<< ic << "\t"
+			<< hashedIndex << "\t"
+			<< ieta << "\t"
+			<< iphi << "\t"
+			<< std::setprecision(3) << ampli_avg << "\t"
+			<< std::setprecision(3) << ampli_rms << "\t"
+			<< std::setprecision(3) << ped_avg << "\t"
+			<< std::setprecision(3) << ped_rms << "\t"
+			<< std::setprecision(3) << jitter_avg << "\t"
+			<< std::setprecision(3) << jitter_rms <<  "\t"
+			<< std::setprecision(3) << ampli_fracBelowThreshold << "\t"
+			<< std::setprecision(6) << entries << "\t"
+			<< std::setprecision(3) << entriesOverAvg << "\t"
+			<< printBitmaskCuts(xtalBitmask_[hashedIndex]);
+
+	}
+
+}
+
+
 TEventList *
 EcalChannelAnalyzer::getEventListFromCut(const TCut& cut) {
 
@@ -327,20 +332,72 @@ void EcalChannelAnalyzer::initHistTypeMaps() {
 	h1TypeToNameMap_[EcalChannelAnalyzer::PROF_PULSE]="pulse";
 }
 
-void EcalChannelAnalyzer::fillEventListVector(const std::vector<std::string> & v_cuts) {
+void EcalChannelAnalyzer::fillEventListVector(const std::vector<std::string> & v_cuts, const std::vector<std::string> & v_masked) {
+
+	std::string masked = "";
+
+	//retrieving everything that has to be masked in a single cut
+	for (unsigned int j=0; j<v_masked.size(); j++) {
+
+		if (j==0) masked = masked + v_masked[j];
+		else masked = masked + " && " + v_masked[j];            
+
+	}
+
+	TCut bufferMasked = masked.c_str();
 
 	for (unsigned int i=0; i<v_cuts.size(); i++) {
 
 		TCut bufferCut = v_cuts[i].c_str();
-		TEventList eventList = *getEventListFromCut(bufferCut); 
+		TCut combinedCut = bufferCut && bufferMasked;
+		TEventList eventList = *getEventListFromCut(combinedCut); 
 		v_eventList_.push_back(eventList);
 
 	}
 
 }
 
-void EcalChannelAnalyzer::writeHistFromFile (const int hashedIndex, const char* slice, const int ic, const EcalChannelAnalyzer::n_h1Type H1_TYPE) {
+//v_masked = vector of masked crystals/ism, type = name of quantity in cut e.g. hashedIndex, ieta, iphi...
+std::string EcalChannelAnalyzer::makeCutFromMaskedVectorInt(const std::vector<int> & v_masked, const std::string & type ) {
 
+	//in case of no masked crystals/sms, return empty string 
+	std::string cutString = "";
+	std::string bufferString = "";
+
+	for (unsigned int i=0; i<v_masked.size(); i++) {
+		if (i==0) bufferString = type + "!=" + intToString(v_masked[i]);
+		else bufferString = " && " + type + "!=" + intToString(v_masked[i]);
+		cutString = cutString + bufferString ;  
+	}
+
+	//debug
+	//std::cout << cutString << std::endl;
+
+	return cutString;
+}
+
+//v_masked = vector of masked slices (sm), type = name of quantity in cut e.g. slice
+std::string EcalChannelAnalyzer::makeCutFromMaskedVectorString(const std::vector<std::string> & v_masked, const std::string & type ) {
+
+	//in case of no masked crystals/sms, return empty string 
+	std::string cutString = "";
+	std::string bufferString = "";
+
+	for (unsigned int i=0; i<v_masked.size(); i++) {
+		if (i==0) bufferString = type + "!=\"" + v_masked[i] + "\"";
+		else bufferString = " && " + type + "!=\"" + v_masked[i] + "\"";
+		cutString = cutString + bufferString ;
+	}
+
+	//debug
+	//std::cout << cutString << std::endl;
+
+	return cutString;
+}
+
+
+
+void EcalChannelAnalyzer::writeHistFromFile (const int hashedIndex, const char* slice, const int ic, const EcalChannelAnalyzer::n_h1Type H1_TYPE) {
 
 	//getting histogram from input file
 	std::string dirbuffer = h1TypeToDirectoryMap_[H1_TYPE]+"/"+intToString(hashedIndex);
@@ -358,8 +415,8 @@ void EcalChannelAnalyzer::writeHistFromFile (const int hashedIndex, const char* 
 	fout_->cd();
 	hist->Write();
 
-        //debug
-        std::cout << "writing: " << histTitle << std::endl;
+	//debug
+	//        std::cout << "writing: " << histTitle << std::endl;
 }
 
 std::string EcalChannelAnalyzer::intToString(int num)
@@ -388,9 +445,9 @@ std::string EcalChannelAnalyzer::printBitmaskCuts(std::vector<bool>*bitmask) {
 
 	for (unsigned int i=0; i< bitmask->size(); i++) {
 		if (bitmask->operator[](i)) {
-			//getting name of cut from TEntryList vector
+			//getting name of cut from TCuts vector
 			bitmaskCuts += ":";
-			bitmaskCuts += v_eventList_[i].GetTitle();
+			bitmaskCuts += v_cuts_[i];
 		}
 	}
 
