@@ -112,7 +112,7 @@ EcalCosmicsHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     }      
 
   int  numberOfCosmics = 0;
-  int eventnum = iEvent.id().event();
+  //int eventnum = iEvent.id().event();
   
      const reco::BasicClusterCollection *clusterCollection_p = bccHandle.product();
   for (reco::BasicClusterCollection::const_iterator clus = clusterCollection_p->begin(); clus != clusterCollection_p->end(); ++clus)

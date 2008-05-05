@@ -28,9 +28,11 @@
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
 #include "FWCore/Framework/interface/Event.h"
+#include "FWCore/Framework/interface/EventSetup.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Framework/interface/ESHandle.h"
+#include "Geometry/EcalMapping/interface/EcalMappingRcd.h"
 
 #include "DataFormats/EcalDigi/interface/EcalDigiCollections.h"
 #include "DataFormats/EcalRecHit/interface/EcalUncalibratedRecHit.h"
@@ -47,7 +49,6 @@
 
 #include "TFile.h"
 #include "TH1F.h"
-#include "TH2F.h"
 #include "TGraph.h"
 #include "TNtuple.h"
 
@@ -69,11 +70,22 @@ class EcalMipGraphs : public edm::EDAnalyzer {
       std::string intToString(int num);
       void writeGraphs();
       void initHists(int);
+      void selectEBHits(edm::Handle<EcalUncalibratedRecHitCollection> EBhits,
+          int ievt, edm::ESHandle<CaloTopology> caloTopo);
+      void selectEEHits(edm::Handle<EcalUncalibratedRecHitCollection> EEhits,
+          int ievt, edm::ESHandle<CaloTopology> caloTopo);
+      void selectEBDigis(edm::Handle<EBDigiCollection> EBdigisHandle, int ievt,
+          std::map<int,EcalDCCHeaderBlock> FEDsAndDCCHeaders_);
+      void selectEEDigis(edm::Handle<EEDigiCollection> EEdigisHandle, int ievt,
+          std::map<int,EcalDCCHeaderBlock> FEDsAndDCCHeaders_);
+      
 
     // ----------member data ---------------------------
 
-  edm::InputTag EcalUncalibratedRecHitCollection_;
+  edm::InputTag EBUncalibratedRecHitCollection_;
+  edm::InputTag EEUncalibratedRecHitCollection_;
   edm::InputTag EBDigis_;
+  edm::InputTag EEDigis_;
   edm::InputTag headerProducer_;
 
   int runNum_;
@@ -82,7 +94,8 @@ class EcalMipGraphs : public edm::EDAnalyzer {
   double threshold_;
   std::string fileName_;
 
-  std::set<EBDetId> listAllChannels;
+  std::set<EBDetId> listEBChannels;
+  std::set<EEDetId> listEEChannels;
     
   int abscissa[10];
   int ordinate[10];
@@ -96,11 +109,11 @@ class EcalMipGraphs : public edm::EDAnalyzer {
   
   TH1F* allFedsTimingHist_;
   
-  TH2F* barrelCosmicOccupancyTTHist_;
-  
   TFile* file_;
   TNtuple* eventsAndSeedCrys_;
   EcalFedMap* fedMap_;
+  const EcalElectronicsMapping* ecalElectronicsMap_;
  
   int naiveEvtNum_; 
+  int graphCount;
 };
