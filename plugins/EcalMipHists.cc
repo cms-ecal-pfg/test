@@ -330,7 +330,7 @@ std::string treeName = "tree"+intToString(runNum_)+".root";
     jitter_avg = v_h1_XtalJitter_[i]->GetMean();
     jitter_rms = v_h1_XtalJitter_[i]->GetRMS();
     entries = (int)v_h1_XtalAmpli_[i]->GetEntries();
-    entriesOverAvg = (int)entries/entryAvg;
+    entriesOverAvg = (float)entries/entryAvg;
     ampli_fracBelowThreshold = v_h1_XtalAmpli_[i]->Integral(0,10)/v_h1_XtalAmpli_[i]->Integral(0,10000);//FIXME: hardwired? overflows should be included though
 
     tree_xtal.Fill();
