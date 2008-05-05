@@ -21,6 +21,7 @@
 #include <memory>
 #include <vector>
 #include <set>
+#include <utility>
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
@@ -53,6 +54,8 @@
 #include "PhysicsTools/UtilAlgos/interface/TFileService.h"
 #include "CaloOnlineTools/EcalTools/interface/EcalFedMap.h"
 
+#define MAX_XTALS 61200
+
 //
 // class declaration
 //
@@ -68,6 +71,8 @@ private:
 	virtual void endJob() ;
 	std::string intToString(int num);
 	void makeTree();
+        float getEntriesAvg();
+
 
 // ----------member data ---------------------------
 
@@ -80,16 +85,16 @@ private:
 	//histograms - for each quantity, one 2d map and one vector of crystal histogram 
 	
 	TProfile2D * prof2_XtalJitter_;
-	TH1D* v_h1_XtalJitter_[61200];
+	TH1D* v_h1_XtalJitter_[MAX_XTALS];
 
 	TProfile2D * prof2_XtalAmpli_;
-	TH1D* v_h1_XtalAmpli_[61200];
+	TH1D* v_h1_XtalAmpli_[MAX_XTALS];
 
 	TProfile2D * prof2_XtalPed_;
-	TH1D* v_h1_XtalPed_[61200];
+	TH1D* v_h1_XtalPed_[MAX_XTALS];
 
 	//for jitter: vector of crystal profiles
-        TProfile * v_prof_XtalPulse_[61200];
+        TProfile * v_prof_XtalPulse_[MAX_XTALS];
 
 	edm::Service<TFileService> fs_;
 	TFileDirectory XtalJitterDir_;

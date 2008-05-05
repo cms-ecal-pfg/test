@@ -30,6 +30,7 @@ using namespace std;
 //
 // constants, enums and typedefs
 //
+#define MAX_XTALS 61200
 
 //
 // static data member definitions
@@ -50,7 +51,7 @@ EcalMipHists::EcalMipHists(const edm::ParameterSet& iConfig) :
   eventNum_(0)
 {
   //cleaning up vectors
-  for (int i=0; i<61200; i++) {
+  for (int i=0; i<MAX_XTALS; i++) {
     v_h1_XtalJitter_[i]=0;
     v_h1_XtalAmpli_[i]=0;
     v_h1_XtalPed_[i]=0;
@@ -107,7 +108,6 @@ EcalMipHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     EBDetId ebDetId = hitItr->id();
     int xtal_hashed = ebDetId.hashedIndex();
     double jitter = hitItr->jitter();
-    jitter+=5;  //Caterina's definition--index of max amp. sample
     double amplitude = hitItr->amplitude();
     //debug
     //cout << "crystal hash:" << xtal_hashed << " jitter:" << jitter << " ampli:" << amplitude << endl;
@@ -117,7 +117,7 @@ EcalMipHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     //booking jitter histograms
     if (!v_h1_XtalJitter_[xtal_hashed]) {
       //TFileDirectory::make histogram if it has never been booked before
-      v_h1_XtalJitter_[xtal_hashed] = XtalJitterDir_.make<TH1D> (intToString(xtal_hashed).c_str(),intToString(xtal_hashed).c_str(),11,0,11);
+      v_h1_XtalJitter_[xtal_hashed] = XtalJitterDir_.make<TH1D> (intToString(xtal_hashed).c_str(),intToString(xtal_hashed).c_str(),11,-6,5);
       //being paranoid about overflows
       v_h1_XtalJitter_[xtal_hashed]->StatOverflows(1);
       //being paranoid about pointers (but not really doing much)
@@ -159,19 +159,19 @@ EcalMipHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     //else if (dccGainId ==3) dccGainHuman =1;
     //else                 dccGainHuman =-1; 
     
+    //double gain = 12.;
     double sampleADC[10];
-    for(int i=0; i<2; ++i)
-    {
-      EBDataFrame df(*digiItr);
-      double gain = 12.;
-      if(df.sample(i).gainId()==1)
-        gain = 1.;
-      else if(df.sample(i).gainId()==2)
-        gain = 2.;
-      sampleADC[i] = 200+(df.sample(i).adc()-200)*gain;
-    }
+    EBDataFrame df(*digiItr);
 
-    double pedestal = (double)(sampleADC[0]+sampleADC[1])/(double)2;
+    double pedestal = 200;
+
+    if(df.sample(0).gainId()!=1 || df.sample(1).gainId()!=1) continue; //goes to the next digi
+    else {
+      sampleADC[0] = df.sample(0).adc();
+      sampleADC[1] = df.sample(1).adc();
+      pedestal = (double)(sampleADC[0]+sampleADC[1])/(double)2;
+    } 
+    
     //debug
     //cout << "DCCGainId:" << dccGainId << " sample0 gain:" << sample0GainId << endl; 
     
@@ -266,8 +266,9 @@ EcalMipHists::endJob()
 EcalMipHists::makeTree()
 {
 
+std::string treeName = "tree"+intToString(runNum_)+".root"; 		
   //TODO: PLACE TREE SOMEWHERE ELSE (.cfg)
-  TFile f_xtalTree("tree.root", "RECREATE");
+  TFile f_xtalTree(treeName.c_str(), "RECREATE");
 
   //creating file-resident tree (scared of how it's going to be handled...)
   //TODO: find a better name
@@ -287,6 +288,7 @@ EcalMipHists::makeTree()
   float jitter_avg;
   float jitter_rms;
   float ampli_fracBelowThreshold;
+  float entriesOverAvg;
 
   tree_xtal.Branch("ic" , &ic, "ic/I");
   tree_xtal.Branch("slice", slice, "slice/C");
@@ -301,11 +303,16 @@ EcalMipHists::makeTree()
   tree_xtal.Branch("jitter_rms" , &jitter_rms, "jitter_rms/F");
   tree_xtal.Branch("ampli_fracBelowThreshold", &ampli_fracBelowThreshold, "ampli_fracBelowThreshold/F");
   tree_xtal.Branch("entries",&entries, "entries/I");
+  tree_xtal.Branch("entriesOverAvg",&entriesOverAvg, "entriesOverAvg/F");
 
-  //must check for unread crystals: do not fill the tree if any of the histogram is absent
+  //getting entries average
+
+  float entryAvg=getEntriesAvg();
+
+  //must check for anred crystals: do not fill the tree if any of the histogram is absent
   //TODO: REPORT SOMEWHERE IF ONE OF THE HISTOGRAMS IS MISSING (can it happen? it could, if different digi and recHit loops - e.g. skipping URH for ... errors)
 
-  for (int i=0; i<61200; i++) {
+  for (int i=0; i<MAX_XTALS; i++) {
 
     if (!v_h1_XtalAmpli_[i] || !v_h1_XtalPed_[i] || !v_h1_XtalJitter_[i]) continue;
 
@@ -323,6 +330,7 @@ EcalMipHists::makeTree()
     jitter_avg = v_h1_XtalJitter_[i]->GetMean();
     jitter_rms = v_h1_XtalJitter_[i]->GetRMS();
     entries = (int)v_h1_XtalAmpli_[i]->GetEntries();
+    entriesOverAvg = (int)entries/entryAvg;
     ampli_fracBelowThreshold = v_h1_XtalAmpli_[i]->Integral(0,10)/v_h1_XtalAmpli_[i]->Integral(0,10000);//FIXME: hardwired? overflows should be included though
 
     tree_xtal.Fill();
@@ -332,6 +340,27 @@ EcalMipHists::makeTree()
 
   tree_xtal.Write();
   f_xtalTree.Close();
+
+}
+
+
+
+float EcalMipHists::getEntriesAvg() {
+
+float avg=0, entrySum=0;
+int counter=0;
+
+for (int i=0; i<MAX_XTALS; i++) {
+        
+        if (!v_h1_XtalAmpli_[i]) continue;
+        entrySum += v_h1_XtalAmpli_[i]->GetEntries();
+        counter++ ;
+        
+} 
+
+avg = entrySum/(float)counter;
+
+return avg;
 
 }
 
