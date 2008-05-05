@@ -121,7 +121,6 @@ class EcalChannelAnalyzer : public edm::EDAnalyzer {
 		float   ampli_fracBelowThreshold;
 		int     entries;
 		float   entriesOverAvg;
-		float   entriesSigmaDistance;
 
 		//branches
 		TBranch        *b_ic;   //!
@@ -138,6 +137,5 @@ class EcalChannelAnalyzer : public edm::EDAnalyzer {
 		TBranch        *b_ampli_fracBelowThreshold;   //!
 		TBranch        *b_entries;   //!
 		TBranch        *b_entriesOverAvg;
-		TBranch	       *b_entriesSigmaDistance;			
 
 };

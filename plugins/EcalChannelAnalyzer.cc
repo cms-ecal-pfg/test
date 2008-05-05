@@ -98,7 +98,6 @@ EcalChannelAnalyzer::EcalChannelAnalyzer(const edm::ParameterSet& iConfig)
 	t_->SetBranchAddress("ampli_fracBelowThreshold", &ampli_fracBelowThreshold, &b_ampli_fracBelowThreshold);
 	t_->SetBranchAddress("entries", &entries, &b_entries);
 	t_->SetBranchAddress("entriesOverAvg",&entriesOverAvg, &b_entriesOverAvg);
-	t_->SetBranchAddress("entriesSigmaDistance",&entriesSigmaDistance, &b_entriesSigmaDistance);	
 
 
 }
