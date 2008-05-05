@@ -58,8 +58,8 @@ mfed=-1
 mieb="-1"
 mcry=-1
 
-hist_min=-10
-hist_max=200
+hist_min=-0.020
+hist_max=2
 
 first_event=1
 last_event=9999
@@ -160,7 +160,7 @@ process TESTGRAPHDUMPER = {
     include "EventFilter/EcalRawToDigiDev/data/EcalUnpackerData.cfi"  
 
     include "Geometry/CaloEventSetup/data/CaloTopology.cfi"
-    include "Geometry/EcalCommonData/data/EcalOnly.cfi"
+    #include "Geometry/EcalCommonData/data/EcalOnly.cfi"
     include "Geometry/CaloEventSetup/data/CaloGeometry.cff"
 
     untracked PSet maxEvents = {untracked int32 input = $last_event}
@@ -177,8 +177,11 @@ process TESTGRAPHDUMPER = {
      untracked vdouble jittWeights = {  0.040,  0.040,  0.040,
                                         0.000,  1.320, -0.050,
                                        -0.500, -0.500, -0.400,  0.000 }
+     untracked double adcToGeVEBConstant = 0.009									   
     }
 
+      include "CalibCalorimetry/EcalLaserCorrection/data/ecalLaserCorrectionService.cfi"
+	
 #module ecalUncalibHit = ecalMaxSampleUncalibRecHit from "RecoLocalCalo/EcalRecProducers/data/ecalMaxSampleUncalibRecHit.cfi"
 module ecalUncalibHit = ecalFixedAlphaBetaFitUncalibRecHit from "RecoLocalCalo/EcalRecProducers/data/ecalFixedAlphaBetaFitUncalibRecHit.cfi" 
     replace ecalUncalibHit.EBdigiCollection = ecalEBunpacker:ebDigis
@@ -232,7 +235,7 @@ EOF
 
 
 echo "initializing cmssw..."
-export SCRAM_ARCH=slc3_ia32_gcc323
+#export SCRAM_ARCH=slc3_ia32_gcc323
 #. /nfshome0/cmssw/cmsset_default.sh
 cd $cmssw_dir;
 eval `scramv1 ru -sh`;

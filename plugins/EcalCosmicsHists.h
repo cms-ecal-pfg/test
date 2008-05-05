@@ -110,7 +110,9 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
   TH2F* allFedsE2vsE1Hist_;
   TH2F* allFedsenergyvsE1Hist_;
   TH2F* allOccupancy_; //New file to do eta-phi occupancy
+  TH2F* TrueOccupancy_; //New file to do eta-phi occupancy
   TH2F* allOccupancyCoarse_; //New file to do eta-phi occupancy
+  TH2F* TrueOccupancyCoarse_; //New file to do eta-phi occupancy
   TH2F* allFedsTimingVsFreqHist_;
   TH2F* allFedsTimingVsAmpHist_;
   TH2F* allFedsTimingPhiHist_;

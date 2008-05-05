@@ -17,22 +17,22 @@ module ecalCosmicsHists = EcalCosmicsHists{
       #untracked vstring maskedEBs = {"-1"}
 
       # parameter to specify histogram maxmimum range
-      #untracked double histogramMaxRange = 200.0
+      #untracked double histogramMaxRange = 2.0
 
       # parameter to specify histogram minimum range
-      #untracked double histogramMinRange = -10.0
+      #untracked double histogramMinRange = -0.02
 
       # parameter for the name of the output root file with TH1F
       untracked string fileName = 'EcalCosmicsHists'
 
       # parameter to specify minimum seed amplitude (ADC)
-      untracked double MinSeedAmp = 5.0
+      #untracked double MinSeedAmp = 5.0
 
       # parameters to specify cosmics selection; algorithm rejects cosmics if:
       # (ampli < MinCosmicE1) && (secondMin < MinCosmicE2) 
-      untracked double MinCosmicE1 = 15.0
-      untracked double MinCosmicE2 = 5.0
+      #untracked double MinCosmicE1 = 15.0
+      #untracked double MinCosmicE2 = 5.0
       	
       # for filling timing histograms
-      untracked double MinTimingAmp = 8.0
+      untracked double MinTimingAmp = 0.100
 }
