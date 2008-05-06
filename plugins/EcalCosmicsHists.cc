@@ -41,8 +41,8 @@ EcalCosmicsHists::EcalCosmicsHists(const edm::ParameterSet& iConfig) :
   barrelClusterCollection_ (iConfig.getParameter<edm::InputTag>("barrelClusterCollection")),
   endcapClusterCollection_ (iConfig.getParameter<edm::InputTag>("endcapClusterCollection")),
   runNum_(-1),
-  histRangeMax_ (iConfig.getUntrackedParameter<double>("histogramMaxRange",2.0)),
-  histRangeMin_ (iConfig.getUntrackedParameter<double>("histogramMinRange",-0.02)),
+  histRangeMax_ (iConfig.getUntrackedParameter<double>("histogramMaxRange",1.8)),
+  histRangeMin_ (iConfig.getUntrackedParameter<double>("histogramMinRange",0.0)),
   minSeedAmp_ (iConfig.getUntrackedParameter<double>("MinSeedAmp",5.0)),
   minTimingAmp_ (iConfig.getUntrackedParameter<double>("MinTimingAmp",.100)),
   fileName_ (iConfig.getUntrackedParameter<std::string>("fileName", std::string("ecalCosmicHists"))),
@@ -250,6 +250,13 @@ EcalCosmicsHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
       allFedsTimingPhiEtaHist_->Fill(iphi,ieta,time);
       if (FEDid>=610&&FEDid<=627)  allFedsTimingPhiEbmHist_->Fill(iphi,time);
       if (FEDid>=628&&FEDid<=645)  allFedsTimingPhiEbpHist_->Fill(iphi,time);
+
+      if (FEDid>=610&&FEDid<=627)  allFedsTimingEbmHist_->Fill(time);
+      if (FEDid>=628&&FEDid<=645)  allFedsTimingEbpHist_->Fill(time);
+      if (FEDid>=613&&FEDid<=616)  allFedsTimingEbmTopHist_->Fill(time);
+      if (FEDid>=631&&FEDid<=634)  allFedsTimingEbpTopHist_->Fill(time);
+      if (FEDid>=622&&FEDid<=625)  allFedsTimingEbmBottomHist_->Fill(time);
+      if (FEDid>=640&&FEDid<=643)  allFedsTimingEbpBottomHist_->Fill(time);
     }
 
   }
@@ -257,7 +264,7 @@ EcalCosmicsHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   numberofCosmicsHist_->Fill(numberOfCosmics);
   if ( numberOfCosmics > 0 ) numberofGoodEvtFreq_->Fill(naiveEvtNum_);
   if ( numberOfCosmics > 0 ) cosmicCounter_++;
-  
+
 }
 
 
@@ -302,7 +309,7 @@ void EcalCosmicsHists::initHists(int FED)
   FEDsAndTimingHists_[FED] = timingHist;
   FEDsAndTimingHists_[FED]->SetDirectory(0);
 
-  TH1F* freqHist = new TH1F(Form("Frequency_FED_%d",FED),Form("Frequency for FED %d",FED),100,0.,100000);
+  TH1F* freqHist = new TH1F(Form("Frequency_FED_%d",FED),Form("Frequency for FED %d;Event Number",FED),100,0.,100000);
   FEDsAndFrequencyHists_[FED] = freqHist;
   FEDsAndFrequencyHists_[FED]->SetDirectory(0);
   
@@ -346,14 +353,14 @@ EcalCosmicsHists::beginJob(const edm::EventSetup&)
 {
   //Here I will init some of the specific histograms
   int numBins = 200;//(int)round(histRangeMax_-histRangeMin_)+1;
-  allFedsenergyHist_           = new TH1F("energy_AllURecHits","energy_AllURecHits;Cluster Energy (GeV)",numBins,histRangeMin_,histRangeMax_);
-  allFedsE2Hist_           = new TH1F("E2_AllURecHits","E2_AllURecHits;Seed+highest neighbor energy (GeV)",numBins,histRangeMin_,histRangeMax_);
-  allFedsE2vsE1Hist_       = new TH2F("E2vsE1_AllURecHits","E2vsE1_AllURecHits;Seed Energy (GeV);Seed+highest neighbor energy (GeV)",numBins,histRangeMin_,histRangeMax_,numBins,histRangeMin_,histRangeMax_);
-  allFedsenergyvsE1Hist_       = new TH2F("energyvsE1_AllURecHits","energyvsE1_AllURecHits;Seed Energy (GeV);Energy(GeV)",numBins,histRangeMin_,histRangeMax_,numBins,histRangeMin_,histRangeMax_);
+  allFedsenergyHist_           = new TH1F("energy_AllClusters","energy_AllClusters;Cluster Energy (GeV)",numBins,histRangeMin_,histRangeMax_);
+  allFedsE2Hist_           = new TH1F("E2_AllClusters","E2_AllClusters;Seed+highest neighbor energy (GeV)",numBins,histRangeMin_,histRangeMax_);
+  allFedsE2vsE1Hist_       = new TH2F("E2vsE1_AllClusters","E2vsE1_AllClusters;Seed Energy (GeV);Seed+highest neighbor energy (GeV)",numBins,histRangeMin_,histRangeMax_,numBins,histRangeMin_,histRangeMax_);
+  allFedsenergyvsE1Hist_       = new TH2F("energyvsE1_AllClusters","energyvsE1_AllClusters;Seed Energy (GeV);Energy(GeV)",numBins,histRangeMin_,histRangeMax_,numBins,histRangeMin_,histRangeMax_);
   allFedsTimingHist_       = new TH1F("timeForAllFeds","timeForAllFeds;Relative Time (1 clock = 25ns)",78,-7,7);
   allFedsTimingVsFreqHist_ = new TH2F("timeVsFreqAllEvent","time Vs Freq All events;Relative Time (1 clock = 25ns);Event Number",78,-7,7,2000,0.,200000);
-  allFedsTimingVsAmpHist_  = new TH2F("timeVsAmpAllEvents","time Vs Amp All Events;Relative Time (1 clock = 25ns);Amplitude",78,-7,7,numBins,histRangeMin_,histRangeMax_);
-  allFedsFrequencyHist_    = new TH1F("FrequencyAllEvent","Frequency for All events",2000,0.,200000);
+  allFedsTimingVsAmpHist_  = new TH2F("timeVsAmpAllEvents","time Vs Amp All Events;Relative Time (1 clock = 25ns);Amplitude (GeV)",78,-7,7,numBins,histRangeMin_,histRangeMax_);
+  allFedsFrequencyHist_    = new TH1F("FrequencyAllEvent","Frequency for All events;Event Number",2000,0.,200000);
   allFedsiPhiProfileHist_  = new TH1F("iPhiProfileAllEvents","iPhi Profile all events;i#phi",360,1.,361.);
   allFedsiEtaProfileHist_  = new TH1F("iEtaProfileAllEvents","iEta Profile all events;i#eta",172,-86,86);
   allOccupancy_            = new TH2F("OccupancyAllEvents","Occupancy all events;i#phi;i#eta",360,1.,361.,172,-86,86);
@@ -367,9 +374,19 @@ EcalCosmicsHists::beginJob(const edm::EventSetup&)
   allFedsTimingPhiEbmHist_       = new TH2F("timePhiEBM","time vs Phi for FEDs in EB- (TT binning);i#phi;Relative Time (1 clock = 25ns)",72,1,361,78,-7,7);
   allFedsTimingPhiEtaHist_       = new TH3F("timePhiEtaAllFEDs","(Phi,Eta,time) for all FEDs (SM,M binning);i#phi;i#eta;Relative Time (1 clock = 25ns)",18,1,361,8,-86,86,78,-7,7);  
 
+  allFedsTimingEbpHist_       = new TH1F("timeEBP","time for FEDs in EB+;Relative Time (1 clock = 25ns)",78,-7,7);
+  allFedsTimingEbmHist_       = new TH1F("timeEBM","time for FEDs in EB-;Relative Time (1 clock = 25ns)",78,-7,7);
+  allFedsTimingEbpTopHist_    = new TH1F("timeEBPTop","time for FEDs in EB+ Top;Relative Time (1 clock = 25ns)",78,-7,7);
+  allFedsTimingEbmTopHist_    = new TH1F("timeEBMTop","time for FEDs in EB- Top;Relative Time (1 clock = 25ns)",78,-7,7);
+  allFedsTimingEbpBottomHist_ = new TH1F("timeEBPBottom","time for FEDs in EB+ Bottom;Relative Time (1 clock = 25ns)",78,-7,7);
+  allFedsTimingEbmBottomHist_ = new TH1F("timeEBMBottom","time for FEDs in EB- Bottom;Relative Time (1 clock = 25ns)",78,-7,7);
+
   numberofCosmicsHist_ = new TH1F("numberofCosmicsPerEvent","Number of cosmics per event;Number of Cosmics",10,0,10);
   numberofGoodEvtFreq_  = new TH1F("frequencyOfGoodEvents","Number of events with cosmic vs Event;Event Number;Number of Good Events/100 Events",2000,0,200000);
-  }
+
+  runNumberHist_ = new TH1F("runNumberHist","Run Number",1,0,1);
+
+}
 
 // ------------ method called once each job just after ending the event loop  ------------
 void 
@@ -463,10 +480,19 @@ EcalCosmicsHists::endJob()
   allFedsTimingPhiHist_->Write();
   allFedsTimingPhiEbpHist_->Write();
   allFedsTimingPhiEbmHist_->Write();
+  allFedsTimingEbpHist_->Write();
+  allFedsTimingEbmHist_->Write();
+  allFedsTimingEbpTopHist_->Write();
+  allFedsTimingEbmTopHist_->Write();
+  allFedsTimingEbpBottomHist_->Write();
+  allFedsTimingEbmBottomHist_->Write();
   allFedsTimingPhiEtaHist_->Write();
 
   numberofCosmicsHist_->Write();
   numberofGoodEvtFreq_->Write();
+
+  runNumberHist_->SetBinContent(1,runNum_);
+  runNumberHist_->Write();
 
   root_file_.Close();
 

@@ -94,6 +94,7 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
   std::map<int,TH2F*> FEDsAndenergyvsE1Hists_;
   std::map<int,TH2F*> FEDsAndOccupancyHists_;  
   std::map<int,TH2F*> FEDsAndTimingVsPhiHists_;  
+  std::map<int,TH2F*> FEDsAndTimingVsEtaHists_;  
   std::map<int,TH2F*> FEDsAndTimingVsModuleHists_;  
 
   TH1F* allFedsHist_;
@@ -116,9 +117,19 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
   TH2F* allFedsTimingVsFreqHist_;
   TH2F* allFedsTimingVsAmpHist_;
   TH2F* allFedsTimingPhiHist_;
+  TH2F* allFedsTimingEtaHist_;
   TH2F* allFedsTimingPhiEbpHist_;
   TH2F* allFedsTimingPhiEbmHist_;
   TH3F* allFedsTimingPhiEtaHist_;
+
+  TH1F* allFedsTimingEbpHist_;
+  TH1F* allFedsTimingEbmHist_;
+  TH1F* allFedsTimingEbpTopHist_;
+  TH1F* allFedsTimingEbmTopHist_;
+  TH1F* allFedsTimingEbpBottomHist_;
+  TH1F* allFedsTimingEbmBottomHist_;
+
+  TH1F* runNumberHist_;
 
   EcalFedMap* fedMap_;
 
