@@ -167,7 +167,7 @@ process TESTGRAPHDUMPER = {
 
     $input_module
 
-   es_source src1 = EcalTrivialConditionRetriever{
+es_source src1 = EcalTrivialConditionRetriever{
      untracked vdouble amplWeights = { -0.333, -0.333, -0.333,
                                         0.000,  0.000,  1.000,
                                         0.000,  0.000,  0.000,  0.000 }
@@ -177,20 +177,24 @@ process TESTGRAPHDUMPER = {
      untracked vdouble jittWeights = {  0.040,  0.040,  0.040,
                                         0.000,  1.320, -0.050,
                                        -0.500, -0.500, -0.400,  0.000 }
-     untracked double adcToGeVEBConstant = 0.009									   
-    }
+     untracked double adcToGeVEBConstant = 0.009
+
+#     untracked string  channelStatusFile = "CalibCalorimetry/EcalTrivialCondModules/data/listCRUZET.v1.hashed.trivial.txt_gio"
+     untracked string  channelStatusFile = ""
+} 
 
       include "CalibCalorimetry/EcalLaserCorrection/data/ecalLaserCorrectionService.cfi"
 	
 #module ecalUncalibHit = ecalMaxSampleUncalibRecHit from "RecoLocalCalo/EcalRecProducers/data/ecalMaxSampleUncalibRecHit.cfi"
 module ecalUncalibHit = ecalFixedAlphaBetaFitUncalibRecHit from "RecoLocalCalo/EcalRecProducers/data/ecalFixedAlphaBetaFitUncalibRecHit.cfi" 
     replace ecalUncalibHit.EBdigiCollection = ecalEBunpacker:ebDigis
-     replace ecalUncalibHit.EEdigiCollection = ecalEBunpacker:eeDigis
+    replace ecalUncalibHit.EEdigiCollection = ecalEBunpacker:eeDigis
 
 	 include "RecoLocalCalo/EcalRecProducers/data/ecalRecHit.cfi"
    replace ecalRecHit.EBuncalibRecHitCollection = ecalUncalibHit:EcalUncalibRecHitsEB
    replace ecalRecHit.EEuncalibRecHitCollection = ecalUncalibHit:EcalUncalibRecHitsEE
-   
+   replace ecalRecHit.ChannelStatusToBeExcluded={1}
+
 	    # geometry needed for clustering
    include "RecoEcal/EgammaClusterProducers/data/geometryForClustering.cff"
 
@@ -202,7 +206,7 @@ module ecalUncalibHit = ecalFixedAlphaBetaFitUncalibRecHit from "RecoLocalCalo/E
       InputTag ecalRecHitCollection = ecalRecHit:EcalRecHitsEB
       InputTag EBDigiCollection                   = ecalEBunpacker:ebDigis
 	  
-  InputTag endcapClusterCollection      = cosmicBasicClusters:CosmicEndcapBasicClusters
+      InputTag endcapClusterCollection      = cosmicBasicClusters:CosmicEndcapBasicClusters
       InputTag barrelClusterCollection      = cosmicBasicClusters:CosmicBarrelBasicClusters
 
       # use hashed index to mask channels
@@ -223,6 +227,7 @@ module ecalUncalibHit = ecalFixedAlphaBetaFitUncalibRecHit from "RecoLocalCalo/E
 
       # parameter for the name of the output root file with TH1F
       untracked string fileName =  '$data_file.$$.graph'
+
     }
 
     path p = {ecalEBunpacker, ecalUncalibHit, ecalRecHit, cosmicClusteringSequence, ecalCosmicsHists}
@@ -241,14 +246,15 @@ cd $cmssw_dir;
 eval `scramv1 ru -sh`;
 cd -;
 echo "... running"
+export FRONTIER_FORCERELOAD=long
 cmsRun "$cfg_path$data_file".graph.$$.cfg >& "$log_dir$data_file".$$.graph
 
 echo ""
 echo ""
 
-mv *.graph.root log/
+mv *.graph.root log/ecalCosmicHists.$data_file.$$.root
 echo "File root with graphs was created:" 
-ls -ltrFh $preferred_dir/log/*.graph.root | tail -1 | awk '{print $9}'
+ls -ltrFh $preferred_dir/log/ecalCosmicHists.$data_file.$$.root | tail -1 | awk '{print $9}'
 
 echo ""
 echo ""
@@ -256,5 +262,5 @@ echo "Now you can look at the plots (TBrowser)"
 echo ""
 echo ""
 
-root -l $preferred_dir/log/*.graph.root
+root -l $preferred_dir/log/ecalCosmicHists.$data_file.$$.root
 #root -l `ls -tr $preferred_dir/log/*.graph.root| tail -n1`

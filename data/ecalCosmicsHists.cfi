@@ -17,10 +17,11 @@ module ecalCosmicsHists = EcalCosmicsHists{
       #untracked vstring maskedEBs = {"-1"}
 
       # parameter to specify histogram maxmimum range
-      #untracked double histogramMaxRange = 2.0
+      untracked double histogramMaxRange = 1.8
 
       # parameter to specify histogram minimum range
-      #untracked double histogramMinRange = -0.02
+      untracked double histogramMinRange = 0.0
+
 
       # parameter for the name of the output root file with TH1F
       untracked string fileName = 'EcalCosmicsHists'
