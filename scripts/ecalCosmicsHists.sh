@@ -38,6 +38,7 @@ echo "      -f|--first_ev         f_ev            first (as written to file) eve
 echo "      -l|--last_ev          l_ev            last  (as written to file) event that will be analyzed; default is 9999"
 echo "      -mfed|--mask_fed_id   mask_fed_id     list of FEDids to mask; default is no masking"
 echo "      -meb|--mask_ieb_id    mask_ieb_id     list of sm barrel ids to mask; default is no masking"
+echo "      -files|--files_file   files_file      File with list of Runs" 
 echo "      -mcry|--mask_cry      mask_cry        list of channels (use hashedIndex) to mask; default is no masking"
 echo "      -hmin|--hist_min      hist_min        min URecHit histogram range value (default is -10)"
 echo "      -hmax|--hist_max      hist_max        max URecHit histogram range value (default is 200)"
@@ -58,13 +59,13 @@ mfed=-1
 mieb="-1"
 mcry=-1
 
-hist_min=-0.020
-hist_max=2
+hist_min=0.0
+hist_max=1.8
 
 first_event=1
 last_event=9999
 
-
+manyfiles="0"
 
   while [ $# -gt 0 ]; do    # while there are parameters available...
     case "$1" in
@@ -104,6 +105,12 @@ last_event=9999
                 hist_max=$2
                 ;;
 
+      -files|--files_file)
+                manyfiles="1"
+                files_file=$2
+                ;;
+
+
     esac
     shift       # Verifica la serie successiva di parametri.
 
@@ -115,6 +122,7 @@ extension=${data_file##*.}
 echo ""
 echo ""
 echo "data to be analyzed:                          $data_file"
+echo "or data to be analyzed:                       $files_file"
 echo "first event analyzed will be:                 $first_event"
 first_event=$(($first_event-1))
 
@@ -139,8 +147,7 @@ if [[ $extension == "root" ]]; then
       untracked vstring fileNames = { 'file:$data_path' }
     untracked bool   debugFlag     = true
    }"
-else
-  input_module="
+else  input_module="
      source = NewEventStreamFileReader{
        untracked uint32 skipEvents = $first_event
        untracked vstring fileNames = { 'file:$data_path' }
@@ -149,6 +156,16 @@ else
      }" 
 fi
 
+if [[ $manyfiles == "1" ]]; then
+    echo "doing many files"
+    input_module="
+    source = PoolSource{
+       untracked uint32 skipEvents = $first_event
+       untracked vstring fileNames = { `/bin/cat $files_file` }
+       #untracked uint32 debugVebosity = 10
+       untracked bool   debugFlag     = true
+    }"
+fi
 
 cat > "$cfg_path$data_file".graph.$$.cfg <<EOF
 
