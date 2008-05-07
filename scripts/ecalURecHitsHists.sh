@@ -206,7 +206,6 @@ EOF
 
 
 echo "initializing cmssw..."
-export SCRAM_ARCH=slc3_ia32_gcc323
 #. /nfshome0/cmssw/cmsset_default.sh
 cd $cmssw_dir;
 eval `scramv1 ru -sh`;
@@ -217,9 +216,9 @@ cmsRun "$cfg_path$data_file".graph.$$.cfg >& "$log_dir$data_file".$$.graph
 echo ""
 echo ""
 
-mv *.graph.root log/
+mv *.graph.root log/uRecHitsHists.$data_file.$$.root
 echo "File root with graphs was created:" 
-ls -ltrFh $preferred_dir/log/*.graph.root | tail -1 | awk '{print $9}'
+ls -ltrFh $preferred_dir/log/uRecHitsHists.$data_file.$$.root | tail -1 | awk '{print $9}'
 
 echo ""
 echo ""
@@ -227,5 +226,5 @@ echo "Now you can look at the plots (TBrowser)"
 echo ""
 echo ""
 
-root -l $preferred_dir/log/*.graph.root
+root -l $preferred_dir/log/uRecHitsHists.$data_file.$$.root
 #root -l `ls -tr $preferred_dir/log/*.graph.root| tail -n1`

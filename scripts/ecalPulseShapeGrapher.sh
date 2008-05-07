@@ -1,5 +1,6 @@
 #! /bin/bash
 
+
 #preferred_dir="/home/daq/"
 preferred_dir=`pwd`
 log_dir=$preferred_dir/log/
@@ -28,8 +29,7 @@ if [ ! -n "$1" ]
 then
 
 echo ""
-echo "This script produces Root TGraphs of crystals in a sideXside square matrix around any crystal whose amplitude exceeds threshold."
-echo "By specifying cry, the threshold selection is disabled and graphs of crystals are made around the given cry only."
+echo "This script produces Root histograms of ADC counts using the given samples, given supermodules, and given channels "
 echo ""
 echo "Options:"
 echo ""
@@ -37,14 +37,12 @@ echo "      -p|--path_file        file_path       data file to be analyzed prece
 echo ""
 echo "      -f|--first_ev         f_ev            first (as written to file) event that will be analyzed; default is 1"
 echo "      -l|--last_ev          l_ev            last  (as written to file) event that will be analyzed; default is 9999"
-echo "      -mfed|--mask_fed_id   mask_fed_id     list of FEDids to mask; default is no masking"
-echo "      -meb|--mask_ieb_id    mask_ieb_id     list of sm barrel ids to mask; default is no masking"
-echo "      -mcry|--mask_cry      mask_cry        list of channels (use hashedIndex) to mask; default is no masking"
-echo "      -t|--threshold        threshold       ADC count threshold to trigger graphing of cluster around seed channel; default is 12.0"
-echo "      -s|--side             side            side of the square centered on seed cry to graph; default is 3"
-echo "      -cry|--seed_cry       seed_crystal    crystal number (use hashedIndex) to fix as center cry (disables automatic threshold selection)"
+#echo "      -fed|--fed_id         fed_id          selects FED id (601...654); default is all"
+#echo "      -eb|--ieb_id          ieb_id          selects sm barrel id(-1...-18,1...18); default is all"
+echo "      -cry|--cryGraph        hashedIndex     graphs from channels to be created"
+echo "      -amp|--ampCut         ampCutADC        digis will not be graphed unless the amplitude is over ampCutADC"
 echo ""
-echo "To specify multiple fed_id's/ieb_id's/cry's to mask use a comma-separated list in between double quotes, e.g., \"1,2,3\" "
+echo "To specify multiple crys, use a comma-separated list in between double quotes, e.g., \"1,2,3\" "
 exit
 
 fi
@@ -56,18 +54,15 @@ data_file="none"
 cfg_path="$conf_dir"
 
 
-mfed=-1
-mieb="-1"
-mcry=-1
+#fed=-1
+#ieb=-1
 
-threshold=12.0
-side=3
-seed_cry=0
+cry_ic="1,2,3,4,5,6,7,8,9,10"
 
 first_event=1
 last_event=9999
 
-
+ampCutADC=13
 
   while [ $# -gt 0 ]; do    # while there are parameters available...
     case "$1" in
@@ -75,7 +70,6 @@ last_event=9999
       -p|--path_file)
                 data_path="$2"
                 ;;
-
 
       -f|--first_ev)
                 first_event="$2"
@@ -87,30 +81,22 @@ last_event=9999
                 ;;
 
 
-      -mfed|--mask_fed_id)
-                mfed=$2
+      #-fed|--fed_id)
+      #          fed=$2
+      #          ;;
+
+      #-eb|--ieb_id)
+      #          ieb=$2
+      #          ;;
+
+      -cry|--cryGraph)
+                cry_ic=$2
+                cryString="true"
                 ;;
 
-      -meb|--mask_ieb_id)
-                mieb=$2
+      -amp|--ampCutADC)
+                ampCutADC=$2
                 ;;
-
-      -mcry|--mask_cry)
-                mcry=$2
-                ;;
-
-      -s|--side)
-                side=$2
-                ;;
-
-      -t|--threshold)
-                threshold=$2
-                ;;
-
-      -cry|--seed_cry)
-                seed_cry=$2
-                ;;
-
     esac
     shift       # Verifica la serie successiva di parametri.
 
@@ -126,14 +112,10 @@ echo "first event analyzed will be:                 $first_event"
 first_event=$(($first_event-1))
 
 echo "last event analyzed will be:                  $last_event"
-echo "supermodules to mask:                         ${mieb} (-1 => no masking)"
-echo "feds to mask:                                 ${mfed} (-1 => no masking)"
-echo "crys to mask:                                 ${mcry} (-1 => no masking)"
+#echo "supermodules selected:                        ${ieb} (-1 => all SMs)"
+#echo "feds selected:                                ${fed} (-1 => all FEDs)"
 
-echo "amplitude threshold:                          $threshold"
-
-echo "side:                                         $side"
-echo "seed crystal:                                 $seed_cry (0 => seed selected via amplitude threshold)"
+echo "channels selected for graphs:                 ${cry_ic}"
 
 
 echo ""
@@ -161,16 +143,13 @@ fi
 cat > "$cfg_path$data_file".graph.$$.cfg <<EOF
 
 
-process ECALMIPGRAPHS = { 
 
-include "EventFilter/EcalRawToDigiDev/data/EcalUnpackerMapping.cfi"
-include "EventFilter/EcalRawToDigiDev/data/EcalUnpackerData.cfi"  
+process ECALPULSESHAPEGRAPHER = { 
 
-include "Geometry/CaloEventSetup/data/CaloTopology.cfi"
-include "Geometry/EcalCommonData/data/EcalOnly.cfi"
-include "Geometry/CaloEventSetup/data/CaloGeometry.cff"
+  include "EventFilter/EcalRawToDigiDev/data/EcalUnpackerMapping.cfi"
+    include "EventFilter/EcalRawToDigiDev/data/EcalUnpackerData.cfi"  
 
-untracked PSet maxEvents = {untracked int32 input = $last_event}
+    untracked PSet maxEvents = {untracked int32 input = $last_event}
 
 $input_module
 
@@ -191,17 +170,11 @@ es_source src1 = EcalTrivialConditionRetriever{
                                        -0.500, -0.500, -0.400,  0.000 }
  }
 
-include "CaloOnlineTools/EcalTools/data/ecalMipGraphs.cfi"
-      replace ecalMipGraphs.maskedChannels = {${mcry}}
-      replace ecalMipGraphs.maskedFEDs = {${mfed}}
-      replace ecalMipGraphs.maskedEBs = {"${mieb}"}
-      replace ecalMipGraphs.amplitudeThreshold = $threshold
-      replace ecalMipGraphs.fileName =  '$data_file.$$.graph'
-      replace ecalMipGraphs.side = $side
-      replace ecalMipGraphs.seedCry = $seed_cry
-      
+include "CaloOnlineTools/EcalTools/data/ecalPulseShapeGrapher.cfi"
+  replace ecalPulseShapeGrapher.listChannels = {${cry_ic}}
+  replace ecalPulseShapeGrapher.AmplitudeCutADC = $ampCutADC
 
-path p = {ecalEBunpacker, ecalUncalibHit, ecalMipGraphs}
+  path p = {ecalEBunpacker, ecalUncalibHit, ecalPulseShapeGrapher}
 
 }
 
@@ -221,14 +194,14 @@ cmsRun "$cfg_path$data_file".graph.$$.cfg >& "$log_dir$data_file".$$.graph
 echo ""
 echo ""
 
-mv *.graph.root log/ecalMipGraphs.$data_file.$$.root
+mv test.root log/pulseShapeGrapher.$data_file.$$.root
 echo "File root with graphs was created:" 
-ls -ltrFh $preferred_dir/log/ecalMipGraphs.$data_file.$$.root | tail -1 | awk '{print $9}'
+ls -ltrFh $preferred_dir/log/pulseShapeGrapher.$data_file.$$.root | tail -1 | awk '{print $9}'
 
 echo ""
 echo ""
-echo "Now you can look at the plots..."
+echo "Now you can look at the plots (TBrowser)..."
 echo ""
 echo ""
 
-root -l $CMSSW_BASE/src/CaloOnlineTools/EcalTools/data/macro/InteractiveDisplay.C
+root -l `ls -ltrFh $preferred_dir/log/pulseShapeGrapher.$data_file.$$.root | tail -1 | awk '{print $9}'`
