@@ -161,7 +161,7 @@ EcalPulseShapeGrapher::analyze(const edm::Event& iEvent, const edm::EventSetup& 
      //string SMname = fedMap_->getSliceFromFed(FEDid);
 
      ampHistMap_[hitDetId.hashedIndex()]->Fill(amplitude);
-     cout << "Cry hash:" << hitDetId.hashedIndex() << " amplitude: " << amplitude << endl;
+     //cout << "Cry hash:" << hitDetId.hashedIndex() << " amplitude: " << amplitude << endl;
 
      if(amplitude < ampCut_)
        continue;
