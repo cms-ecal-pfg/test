@@ -10,6 +10,7 @@
 #include "CaloOnlineTools/EcalTools/plugins/EcalCosmicsHists.h"
 #include "CaloOnlineTools/EcalTools/plugins/EcalTPGAnalyzer.h"
 #include "CaloOnlineTools/EcalTools/plugins/EcalHexDisplay.h"
+#include "CaloOnlineTools/EcalTools/plugins/EcalPulseShapeGrapher.h"
 
 
 DEFINE_FWK_MODULE(EcalDigiDisplay);
@@ -23,4 +24,5 @@ DEFINE_FWK_MODULE(EcalURecHitHists);
 DEFINE_FWK_MODULE(EcalCosmicsHists);
 DEFINE_FWK_MODULE(EcalTPGAnalyzer);
 DEFINE_FWK_MODULE(EcalHexDisplay);
+DEFINE_FWK_MODULE(EcalPulseShapeGrapher);
 
