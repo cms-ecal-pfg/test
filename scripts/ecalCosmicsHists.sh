@@ -184,24 +184,25 @@ process TESTGRAPHDUMPER = {
 
     $input_module
 
-es_source src1 = EcalTrivialConditionRetriever{
-     untracked vdouble amplWeights = { -0.333, -0.333, -0.333,
-                                        0.000,  0.000,  1.000,
-                                        0.000,  0.000,  0.000,  0.000 }
-     untracked vdouble pedWeights  = {  0.333,  0.333,  0.333,
-                                        0.000,  0.000,  0.000,
-                                        0.000,  0.000,  0.000,  0.000 }
-     untracked vdouble jittWeights = {  0.040,  0.040,  0.040,
-                                        0.000,  1.320, -0.050,
-                                       -0.500, -0.500, -0.400,  0.000 }
-     untracked double adcToGeVEBConstant = 0.009
+include "Configuration/StandardSequences/data/FrontierConditions_GlobalTag.cff"
+replace GlobalTag.globaltag = "CRUZET_V2::All"
 
-     untracked string  channelStatusFile = "CaloOnlineTools/EcalTools/data/listCRUZET.v1.hashed.trivial.txt_gio"
-#     untracked string  channelStatusFile = ""
-} 
+include "CalibCalorimetry/EcalTrivialCondModules/data/EcalTrivialCondRetriever.cfi"
+replace EcalTrivialConditionRetriever.producedEcalWeights = false
+replace EcalTrivialConditionRetriever.producedEcalPedestals = false
+replace EcalTrivialConditionRetriever.producedEcalIntercalibConstants = false
+replace EcalTrivialConditionRetriever.producedEcalIntercalibErrors = false
+replace EcalTrivialConditionRetriever.producedEcalGainRatios = false
+replace EcalTrivialConditionRetriever.producedEcalADCToGeVConstant = false
+replace EcalTrivialConditionRetriever.producedEcalLaserCorrection = false
+#Put this to true to read channel status from file 
+replace EcalTrivialConditionRetriever.producedChannelStatus = true
+replace EcalTrivialConditionRetriever.channelStatusFile ="CalibCalorimetry/EcalTrivialCondModules/data/listCRUZET.v1.hashed.trivial.txt_gio"
+es_prefer = EcalTrivialConditionRetriever{}
 
-      include "CalibCalorimetry/EcalLaserCorrection/data/ecalLaserCorrectionService.cfi"
-	
+include "CalibCalorimetry/EcalLaserCorrection/data/ecalLaserCorrectionService.cfi"
+
+
 #module ecalUncalibHit = ecalMaxSampleUncalibRecHit from "RecoLocalCalo/EcalRecProducers/data/ecalMaxSampleUncalibRecHit.cfi"
 module ecalUncalibHit = ecalFixedAlphaBetaFitUncalibRecHit from "RecoLocalCalo/EcalRecProducers/data/ecalFixedAlphaBetaFitUncalibRecHit.cfi" 
     replace ecalUncalibHit.EBdigiCollection = ecalEBunpacker:ebDigis
