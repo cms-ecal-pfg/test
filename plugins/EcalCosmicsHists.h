@@ -37,6 +37,10 @@
 #include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
 #include "DataFormats/DetId/interface/DetId.h"
 #include "DataFormats/EcalRawData/interface/EcalRawDataCollections.h"
+#include "DataFormats/L1GlobalMuonTrigger/interface/L1MuRegionalCand.h"
+#include "DataFormats/L1GlobalMuonTrigger/interface/L1MuGMTReadoutCollection.h"
+#include "DataFormats/L1GlobalTrigger/interface/L1GlobalTriggerReadoutRecord.h"
+#include "DataFormats/L1GlobalTrigger/interface/L1GtPsbWord.h"
 
 #include "Geometry/EcalMapping/interface/EcalElectronicsMapping.h"
 
@@ -72,6 +76,7 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
   edm::InputTag ecalRecHitCollection_;
   edm::InputTag barrelClusterCollection_;
   edm::InputTag endcapClusterCollection_;
+  edm::InputTag l1GTReadoutRecTag_;
   
   
   int runNum_;
@@ -100,6 +105,7 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
   TH1F* allFedsHist_;
   TH1F* allFedsE2Hist_;
   TH1F* allFedsenergyHist_;
+  TH1F* allFedsenergyHighHist_;
   TH1F* allFedsTimingHist_;
   TH1F* allFedsFrequencyHist_;
   TH1F* allFedsiPhiProfileHist_;
@@ -140,4 +146,7 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
   
   int naiveEvtNum_; 
   int cosmicCounter_;
+
+  std::vector<int> l1Accepts_;
+  std::vector<std::string> l1Names_;
 };

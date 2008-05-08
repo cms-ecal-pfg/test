@@ -36,4 +36,7 @@ module ecalCosmicsHists = EcalCosmicsHists{
       	
       # for filling timing histograms
       untracked double MinTimingAmp = 0.100
+
+      # Global trigger tag
+      string l1GlobalReadoutRecord = "gtDigis"
 }
