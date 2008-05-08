@@ -1,7 +1,7 @@
 //
 // Macro to produce ECAL cosmic plots
 //
-void DrawCosmicPlots(Char_t* infile = 0, Char_t* fileType = "png", Bool_t printPics = kTRUE, Char_t* dirName = ".")
+void DrawCosmicPlots(Char_t* infile = 0, Int_t runNum=0, Char_t* fileType = "png", Bool_t printPics = kTRUE, Char_t* dirName = ".")
 {
 
   gROOT->SetStyle("Plain");
@@ -16,12 +16,17 @@ void DrawCosmicPlots(Char_t* infile = 0, Char_t* fileType = "png", Bool_t printP
 
   TFile* f = new TFile(infile);
 
-  int runNumber = runNumberHist->GetBinContent(1);
-  cout << "Run Number: " << runNumber << endl;
+  int runNumber = 0;
+  if (runNum==0) {
+    runNumber = runNumberHist->GetBinContent(1);
+    cout << "Run Number: " << runNumber << endl;
+  } else {
+    runNumber = runNum;
+  }
 
   char name[100];  
 
-  const int nHists = 22;
+  const int nHists = 24;
 
   TCanvas* c[nHists];
   char cname[100]; 
@@ -93,7 +98,8 @@ void DrawCosmicPlots(Char_t* infile = 0, Char_t* fileType = "png", Bool_t printP
   OccupancyAllEvents->Draw("colz");
   char mytitle[100]; sprintf(mytitle,"%s",OccupancyAllEvents->GetTitle()); 
   strcat(mytitle,runChar); OccupancyAllEvents->SetTitle(mytitle);
-  OccupancyAllEvents->SetMinimum(1);  
+    OccupancyAllEvents->SetMinimum(1);  
+    //        OccupancyAllEvents->SetMaximum(100);  
   OccupancyAllEvents->GetXaxis()->SetNdivisions(-18);
   OccupancyAllEvents->GetYaxis()->SetNdivisions(2);
   c[6]->SetLogy(0);
@@ -237,6 +243,29 @@ void DrawCosmicPlots(Char_t* infile = 0, Char_t* fileType = "png", Bool_t printP
   c[21]->SetLogy(0);
   c[21]->SetLogz(0);
   if (printPics) { sprintf(name,"%s/cosmicsAnalysis_frequencyOfGoodEvents_%i.%s",dirName,runNumber,fileType); c[21]->Print(name); }
+
+
+  c[22]->cd();
+  OccupancyAllEvents->Draw("colz");
+  char mytitle[100]; sprintf(mytitle,"%s",OccupancyAllEvents->GetTitle()); 
+  strcat(mytitle,runChar); OccupancyAllEvents->SetTitle(mytitle);
+    OccupancyAllEvents->SetMinimum(1);  
+    OccupancyAllEvents->SetMaximum(100);  
+  OccupancyAllEvents->GetXaxis()->SetNdivisions(-18);
+  OccupancyAllEvents->GetYaxis()->SetNdivisions(2);
+  c[22]->SetLogy(0);
+  c[22]->SetLogz(1);
+  c[22]->SetGridx(1);
+  c[22]->SetGridy(1);
+  if (printPics) { sprintf(name,"%s/cosmicsAnalysis_OccupancyAllEventsMax100_%i.%s",dirName,runNumber,fileType); c[22]->Print(name); }
+
+  c[23]->cd();  
+  energyHigh_AllClusters->Draw();
+  char mytitle[100]; sprintf(mytitle,"%s",energyHigh_AllClusters->GetTitle()); 
+  strcat(mytitle,runChar); energyHigh_AllClusters->SetTitle(mytitle);
+  c[23]->SetLogy(1);
+  if (printPics) { sprintf(name,"%s/cosmicsAnalysis_energyHigh_AllClusters_%i.%s",dirName,runNumber,fileType); c[23]->Print(name); }
+
 
 
   // fancy timing plots
