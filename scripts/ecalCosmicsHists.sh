@@ -248,13 +248,22 @@ module ecalUncalibHit = ecalFixedAlphaBetaFitUncalibRecHit from "RecoLocalCalo/E
 
     }
 
-    path p = {ecalEBunpacker, ecalUncalibHit, ecalRecHit, cosmicClusteringSequence, ecalCosmicsHists}
+    include "L1TriggerConfig/L1ScalesProducers/data/L1MuTriggerScalesConfig.cff"
+    #include "L1TriggerConfig/L1ScalesProducers/data/L1MuGMTScalesConfig.cff"
+    #include "L1TriggerConfig/GctConfigProducers/data/L1GctConfig.cff"
+    #include "L1TriggerConfig/L1GtConfigProducers/data/L1GtConfig.cff"
+    #include "L1TriggerConfig/GMTConfigProducers/data/L1MuGMTParametersConfig.cff"
+
+    #module gctDigis = l1GctHwDigis from "EventFilter/GctRawToDigi/data/l1GctHwDigis.cfi"
+    module gtDigis = l1GtUnpack from "EventFilter/L1GlobalTriggerRawToDigi/data/l1GtUnpack.cfi"
+    replace gtDigis.DaqGtInputTag = source
+
+    path p = {ecalEBunpacker, ecalUncalibHit, ecalRecHit, cosmicClusteringSequence, gtDigis, ecalCosmicsHists}
 
 }
 
 
 EOF
-
 
 
 echo "initializing cmssw..."

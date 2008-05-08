@@ -120,6 +120,7 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
   TH2F* TrueOccupancy_; //New file to do eta-phi occupancy
   TH2F* allOccupancyCoarse_; //New file to do eta-phi occupancy
   TH2F* TrueOccupancyCoarse_; //New file to do eta-phi occupancy
+
   TH2F* allFedsTimingVsFreqHist_;
   TH2F* allFedsTimingVsAmpHist_;
   TH2F* allFedsTimingPhiHist_;
@@ -134,6 +135,34 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
   TH1F* allFedsTimingEbmTopHist_;
   TH1F* allFedsTimingEbpBottomHist_;
   TH1F* allFedsTimingEbmBottomHist_;
+
+  TH2F* allOccupancyECAL_; 
+  TH2F* allOccupancyCoarseECAL_; 
+  TH1F* allFedsTimingHistECAL_;
+  TH3F* allFedsTimingPhiEtaHistECAL_;
+
+  TH2F* allOccupancyDT_; 
+  TH2F* allOccupancyCoarseDT_; 
+  TH1F* allFedsTimingHistDT_;
+  TH3F* allFedsTimingPhiEtaHistDT_;
+
+  TH2F* allOccupancyRPC_; 
+  TH2F* allOccupancyCoarseRPC_; 
+  TH1F* allFedsTimingHistRPC_;
+  TH3F* allFedsTimingPhiEtaHistRPC_;
+
+  TH2F* allOccupancyCSC_; 
+  TH2F* allOccupancyCoarseCSC_; 
+  TH1F* allFedsTimingHistCSC_;
+  TH3F* allFedsTimingPhiEtaHistCSC_;
+
+  TH2F* allOccupancyHCAL_; 
+  TH2F* allOccupancyCoarseHCAL_; 
+  TH1F* allFedsTimingHistHCAL_;
+  TH3F* allFedsTimingPhiEtaHistHCAL_;
+
+  TH1F* triggerHist_;
+  TH1F* triggerExclusiveHist_;
 
   TH1F* runNumberHist_;
 
