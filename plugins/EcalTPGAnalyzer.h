@@ -29,10 +29,10 @@ class towerEner {
   float data_[10] ;
   int tpgEmul_[5] ;
   int tpgADC_; 
-  int iphi_, ieta_, ttf_, fg_ ;
+  int iphi_, ieta_, iSM_, ttf_, fg_ ;
   towerEner()
     : eRec_(0), tpgADC_(0),  
-      iphi_(-999), ieta_(-999), ttf_(-999), fg_(-999)
+      iphi_(-999), ieta_(-999), iSM_(0), ttf_(-999), fg_(-999)
   { 
     for (int i=0 ; i<10 ; i ++) data_[i] = 0. ; 
     for (int i=0 ; i<5 ; i ++) tpgEmul_[i] = 0 ; 
@@ -57,7 +57,7 @@ private:
 private:
   TFile *histfile_;
   TTree *tree_ ;
-  TH2F * shape_ ;
+  TH2F * shape_[36] ;
   TH2F * shapeMax_ ;
   TH2F * occupancyTP_ ;
   TH2F * occupancyTPEmul_ ;
@@ -78,6 +78,7 @@ private:
   std::string digi_producerEB_, digi_producerEE_ ;
   std::string emul_label_;
   std::string emul_producer_;
+  bool allowTP_ ;
   bool useEE_ ;
   int adcCut_, shapeCut_, occupancyCut_ ;
   int tpgRef_ ;

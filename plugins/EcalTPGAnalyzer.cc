@@ -33,6 +33,7 @@
 #include "EcalTPGAnalyzer.h"
 
 #include <TMath.h>
+#include <sstream>
 
 using namespace edm;
 class CaloSubdetectorGeometry;
@@ -46,6 +47,7 @@ EcalTPGAnalyzer::EcalTPGAnalyzer(const edm::ParameterSet&  iConfig)
   digi_producerEE_=  iConfig.getParameter<std::string>("DigiProducerEE");
   emul_label_= iConfig.getParameter<std::string>("EmulLabel");
   emul_producer_=  iConfig.getParameter<std::string>("EmulProducer");
+  allowTP_ = iConfig.getParameter<bool>("ReadTriggerPrimitives");
   useEE_ = iConfig.getParameter<bool>("UseEndCap");
   adcCut_ =  iConfig.getParameter<int>("ADCCut");
   shapeCut_ =  iConfig.getParameter<int>("shapeCut");
@@ -55,20 +57,24 @@ EcalTPGAnalyzer::EcalTPGAnalyzer(const edm::ParameterSet&  iConfig)
   histfile_ = new TFile("histosTPG.root","RECREATE");
 
   //histo
-  shape_ = new TH2F("shape","Tower Pulses",110, -1, 10, 120, -1.1, 1.1) ;
-  shape_->GetXaxis()->SetTitle("sample nb") ;
-  shapeMax_ = new TH2F("shapeMax","Crystal Max Shapes",110, -1, 10, 120, -1.1, 1.1) ; 
+  for (int iSM  = 0 ; iSM<36 ; iSM++) {
+    std::stringstream name ;
+    name<<"shape_"<<iSM+1 ;
+    shape_[iSM] = new TH2F(name.str().c_str(),"Tower Pulses",11, -1, 10, 120, -1.1, 1.1) ;
+    shape_[iSM]->GetXaxis()->SetTitle("sample nb") ;
+  }
+  shapeMax_ = new TH2F("shapeMax","Crystal Max Shapes",11, -1, 10, 120, -1.1, 1.1) ; 
   shapeMax_->GetXaxis()->SetTitle("sample nb") ;
 
-  occupancyTP_ = new TH2F("occupancyTP", "Occupancy TP data", 38, -19, 19, 73, 0, 73) ;
-  occupancyTP_->GetXaxis()->SetTitle("eta index") ;
-  occupancyTP_->GetYaxis()->SetTitle("phi index") ;
-  occupancyTPEmul_ = new TH2F("occupancyTPEmul", "Occupancy TP emulator", 38, -19, 19, 73, 0, 73) ;
-  occupancyTPEmul_->GetXaxis()->SetTitle("eta index") ;
-  occupancyTPEmul_->GetYaxis()->SetTitle("phi index") ;
-  occupancyTPEmulMax_ = new TH2F("occupancyTPEmulMax", "Occupancy TP emulator max", 38, -19, 19, 73, 0, 73) ;
-  occupancyTPEmulMax_->GetXaxis()->SetTitle("eta index") ;
-  occupancyTPEmulMax_->GetYaxis()->SetTitle("phi index") ;
+  occupancyTP_ = new TH2F("occupancyTP", "Occupancy TP data", 72, 1, 73, 38, -19, 19) ;
+  occupancyTP_->GetYaxis()->SetTitle("eta index") ;
+  occupancyTP_->GetXaxis()->SetTitle("phi index") ;
+  occupancyTPEmul_ = new TH2F("occupancyTPEmul", "Occupancy TP emulator", 72, 1, 73, 38, -19, 19) ;
+  occupancyTPEmul_->GetYaxis()->SetTitle("eta index") ;
+  occupancyTPEmul_->GetXaxis()->SetTitle("phi index") ;
+  occupancyTPEmulMax_ = new TH2F("occupancyTPEmulMax", "Occupancy TP emulator max", 72, 1, 73, 38, -19, 19) ;
+  occupancyTPEmulMax_->GetYaxis()->SetTitle("eta index") ;
+  occupancyTPEmulMax_->GetXaxis()->SetTitle("phi index") ;
 
   crystalVsTP_ = new TH2F("crystalVsTP", "tower Ener vs TP", 256, 0., 256., 301, -1., 300.) ;
   crystalVsTP_->GetXaxis()->SetTitle("TP (ADC)") ;
@@ -97,7 +103,7 @@ EcalTPGAnalyzer::EcalTPGAnalyzer(const edm::ParameterSet&  iConfig)
 
 EcalTPGAnalyzer::~EcalTPGAnalyzer()
 {
-  shape_->Write() ;
+  for (int iSM=0 ; iSM<36 ; iSM++) shape_[iSM]->Write() ;
   shapeMax_->Write() ;
   occupancyTP_->Write() ;
   occupancyTPEmul_->Write() ;
@@ -188,6 +194,7 @@ void EcalTPGAnalyzer::analyze(const edm::Event& iEvent, const  edm::EventSetup &
       }
       (itTT->second).iphi_ = towid.iphi() ;
       (itTT->second).ieta_ = towid.ieta() ;
+      (itTT->second).iSM_ = towid.iDCC() ;
     }
     else {
       towerEner tE ;
@@ -202,6 +209,7 @@ void EcalTPGAnalyzer::analyze(const edm::Event& iEvent, const  edm::EventSetup &
       }
       tE.iphi_ = towid.iphi() ;
       tE.ieta_ = towid.ieta() ;
+      tE.iSM_ = towid.iDCC() ;
       mapTower[towid] = tE ;
     }
   }
@@ -255,31 +263,35 @@ void EcalTPGAnalyzer::analyze(const edm::Event& iEvent, const  edm::EventSetup &
     }
   }
   
-  // Get TP data
-  edm::Handle<EcalTrigPrimDigiCollection> tp;
-  iEvent.getByLabel(label_,producer_,tp);
+ 
+  // Get TP data  
+  if (allowTP_) {
+    edm::Handle<EcalTrigPrimDigiCollection> tp;
+    iEvent.getByLabel(label_,producer_,tp);
   
-  for (unsigned int i=0;i<tp.product()->size();i++) {
-    EcalTriggerPrimitiveDigi d = (*(tp.product()))[i];
-    const EcalTrigTowerDetId TPtowid= d.id();
-    
-    itTT = mapTower.find(TPtowid) ;
-    if (itTT != mapTower.end()) {
-      (itTT->second).tpgADC_ = d.compressedEt() ;
-      (itTT->second).ttf_ = d.ttFlag() ;
-      (itTT->second).fg_ = d.fineGrain() ;      
-    }
-    else {
-      towerEner tE ;
-      tE.iphi_ = TPtowid.iphi() ;
-      tE.ieta_ = TPtowid.ieta() ;
-      tE.tpgADC_ = d.compressedEt() ;
-      tE.ttf_ = d.ttFlag() ;
-      tE.fg_ = d.fineGrain() ;    
-      mapTower[TPtowid] = tE ;
+    for (unsigned int i=0;i<tp.product()->size();i++) {
+      EcalTriggerPrimitiveDigi d = (*(tp.product()))[i];
+      const EcalTrigTowerDetId TPtowid= d.id();
+      
+      itTT = mapTower.find(TPtowid) ;
+      if (itTT != mapTower.end()) {
+	(itTT->second).tpgADC_ = d.compressedEt() ;
+	(itTT->second).ttf_ = d.ttFlag() ;
+	(itTT->second).fg_ = d.fineGrain() ;      
+      }
+      else {
+	towerEner tE ;
+	tE.iphi_ = TPtowid.iphi() ;
+	tE.ieta_ = TPtowid.ieta() ;
+	tE.tpgADC_ = d.compressedEt() ;
+	tE.ttf_ = d.ttFlag() ;
+	tE.fg_ = d.fineGrain() ;    
+	mapTower[TPtowid] = tE ;
+      }
     }
   }
-  
+
+
   // Get Emulators TP
   edm::Handle<EcalTrigPrimDigiCollection> tpEmul ;
   iEvent.getByLabel(emul_label_, emul_producer_, tpEmul);
@@ -341,17 +353,18 @@ void EcalTPGAnalyzer::fillShape(towerEner & t)
 {
   float max = 0. ;
   for (int i=0 ; i<10 ; i++) if (t.data_[i]>max) max = t.data_[i] ;
-  if (max>0 && max>=shapeCut_)
-    for (int i=0 ; i<10 ; i++) shape_->Fill(i, t.data_[i]/max) ;
+  if (max>0 && max>=shapeCut_) {
+    for (int i=0 ; i<10 ; i++) shape_[t.iSM_-1]->Fill(i, t.data_[i]/max, max) ;
+  }
 }
 
 void  EcalTPGAnalyzer::fillOccupancyPlots(towerEner & t)
 {
   int max = 0 ;
   for (int i=0 ; i<5 ; i++) if ((t.tpgEmul_[i]&0xff)>max) max = (t.tpgEmul_[i]&0xff) ; 
-  if (max >= occupancyCut_) occupancyTPEmulMax_->Fill(t.ieta_, t.iphi_) ;
-  if ((t.tpgEmul_[tpgRef_]&0xff) >= occupancyCut_) occupancyTPEmul_->Fill(t.ieta_, t.iphi_) ;
-  if (t.tpgADC_ >= occupancyCut_) occupancyTP_->Fill(t.ieta_, t.iphi_) ;
+  if (max >= occupancyCut_) occupancyTPEmulMax_->Fill(t.iphi_, t.ieta_) ;
+  if ((t.tpgEmul_[tpgRef_]&0xff) >= occupancyCut_) occupancyTPEmul_->Fill(t.iphi_, t.ieta_) ;
+  if (t.tpgADC_ >= occupancyCut_) occupancyTP_->Fill(t.iphi_, t.ieta_) ;
 }
 
 void  EcalTPGAnalyzer::fillEnergyPlots(towerEner & t)
