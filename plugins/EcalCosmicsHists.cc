@@ -366,7 +366,12 @@ EcalCosmicsHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     numXtalInE9Hist->Fill(numXtalsinE9);
     occupHist->Fill(ietaSM,iphiSM);
 
-    
+    if (energy>10.0) {
+      allOccupancyHighEnergy_->Fill(iphi, ieta);
+      allOccupancyHighEnergyCoarse_->Fill(iphi, ieta);    
+      allFedsOccupancyHighEnergyHist_->Fill(iphi,ieta,energy);
+    }
+
     if(isEcalL1&&!isDTL1&&!isRPCL1&&!isCSCL1&&!isHCALL1) {
       allOccupancyECAL_->Fill(iphi, ieta);
       allOccupancyCoarseECAL_->Fill(iphi, ieta);
@@ -397,7 +402,7 @@ EcalCosmicsHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
       triggerExclusiveHist_->Fill(2);
     }
     
-    if(!isEcalL1&&!isDTL1&&isRPCL1&&!isCSCL1&&!isHCALL1) {   
+    if(!isEcalL1&&!isDTL1&&isRPCL1&&!isCSCL1&&!isHCALL1) {
       allOccupancyRPC_->Fill(iphi, ieta);
       allOccupancyCoarseRPC_->Fill(iphi, ieta);
       if (ampli > minTimingAmp_) {
@@ -554,6 +559,9 @@ EcalCosmicsHists::beginJob(const edm::EventSetup&)
   TrueOccupancy_            = new TH2F("TrueOccupancyAllEvents","True Occupancy all events;#phi;#eta",360,-3.14159,3.14159,172,-1.5,1.5);
   allOccupancyCoarse_      = new TH2F("OccupancyAllEventsCoarse","Occupancy all events Coarse;i#phi;i#eta",360/5,1,361.,172/5,-86,86);
   TrueOccupancyCoarse_      = new TH2F("TrueOccupancyAllEventsCoarse","True Occupancy all events Coarse;#phi;#eta",360/5,-3.14159,3.14159,172/5,-1.5,1.5);
+  allOccupancyHighEnergy_            = new TH2F("OccupancyHighEnergyEvents","Occupancy high energy events;i#phi;i#eta",360,1.,361.,172,-86,86);
+  allOccupancyHighEnergyCoarse_      = new TH2F("OccupancyHighEnergyEventsCoarse","Occupancy high energy events Coarse;i#phi;i#eta",360/5,1,361.,172/5,-86,86);
+  allFedsOccupancyHighEnergyHist_    = new TH3F("OccupancyHighEnergyEvents3D","(Phi,Eta,energy) for all high energy events;i#phi;i#eta;energy (GeV)",18,1,361,8,-86,86,10,10,210);
   allFedsNumXtalsInE9Hist_ = new TH1F("NumXtalsInE9AllHist","Number of active Xtals in E9;NumXtals",10,0,10);
 
   allFedsTimingPhiHist_          = new TH2F("timePhiAllFEDs","time vs Phi for all FEDs (TT binning);i#phi;Relative Time (1 clock = 25ns)",72,1,361,78,-7,7);
@@ -692,6 +700,8 @@ EcalCosmicsHists::endJob()
   TrueOccupancy_->Write();
   allOccupancyCoarse_->Write();
   TrueOccupancyCoarse_->Write();
+  allOccupancyHighEnergy_->Write();
+  allOccupancyHighEnergyCoarse_->Write();
   allFedsNumXtalsInE9Hist_->Write();
   allFedsTimingPhiHist_->Write();
   allFedsTimingPhiEbpHist_->Write();
@@ -703,7 +713,7 @@ EcalCosmicsHists::endJob()
   allFedsTimingEbpBottomHist_->Write();
   allFedsTimingEbmBottomHist_->Write();
   allFedsTimingPhiEtaHist_->Write();
-
+  allFedsOccupancyHighEnergyHist_->Write();
   
   allOccupancyECAL_->Write();
   allOccupancyCoarseECAL_->Write();

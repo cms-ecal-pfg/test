@@ -164,6 +164,10 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
   TH1F* triggerHist_;
   TH1F* triggerExclusiveHist_;
 
+  TH2F* allOccupancyHighEnergy_; 
+  TH2F* allOccupancyHighEnergyCoarse_; 
+  TH3F* allFedsOccupancyHighEnergyHist_;
+
   TH1F* runNumberHist_;
 
   EcalFedMap* fedMap_;
