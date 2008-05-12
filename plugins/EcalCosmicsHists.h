@@ -83,6 +83,9 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
   double histRangeMax_, histRangeMin_;
   double minSeedAmp_;
   double minTimingAmp_;
+  
+  double *ttEtaBins;
+  double *modEtaBins;
   std::string fileName_;
   
   std::map<int,TH1F*> FEDsAndHists_;
@@ -128,6 +131,8 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
   TH2F* allFedsTimingPhiEbpHist_;
   TH2F* allFedsTimingPhiEbmHist_;
   TH3F* allFedsTimingPhiEtaHist_;
+  TH3F* allFedsTimingTTHist_;
+  TH2F* allFedsTimingLMHist_;
 
   TH1F* allFedsTimingEbpHist_;
   TH1F* allFedsTimingEbmHist_;
@@ -140,26 +145,36 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
   TH2F* allOccupancyCoarseECAL_; 
   TH1F* allFedsTimingHistECAL_;
   TH3F* allFedsTimingPhiEtaHistECAL_;
+  TH3F* allFedsTimingTTHistECAL_;
+  TH2F* allFedsTimingLMHistECAL_;
 
   TH2F* allOccupancyDT_; 
   TH2F* allOccupancyCoarseDT_; 
   TH1F* allFedsTimingHistDT_;
   TH3F* allFedsTimingPhiEtaHistDT_;
+  TH3F* allFedsTimingTTHistDT_;
+  TH2F* allFedsTimingLMHistDT_;
 
   TH2F* allOccupancyRPC_; 
   TH2F* allOccupancyCoarseRPC_; 
   TH1F* allFedsTimingHistRPC_;
   TH3F* allFedsTimingPhiEtaHistRPC_;
+  TH3F* allFedsTimingTTHistRPC_;
+  TH2F* allFedsTimingLMHistRPC_;
 
   TH2F* allOccupancyCSC_; 
   TH2F* allOccupancyCoarseCSC_; 
   TH1F* allFedsTimingHistCSC_;
   TH3F* allFedsTimingPhiEtaHistCSC_;
+  TH3F* allFedsTimingTTHistCSC_;
+  TH2F* allFedsTimingLMHistCSC_;
 
   TH2F* allOccupancyHCAL_; 
   TH2F* allOccupancyCoarseHCAL_; 
   TH1F* allFedsTimingHistHCAL_;
   TH3F* allFedsTimingPhiEtaHistHCAL_;
+  TH3F* allFedsTimingTTHistHCAL_;
+  TH2F* allFedsTimingLMHistHCAL_;
 
   TH1F* triggerHist_;
   TH1F* triggerExclusiveHist_;

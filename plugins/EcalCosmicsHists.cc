@@ -59,6 +59,8 @@ EcalCosmicsHists::EcalCosmicsHists(const edm::ParameterSet& iConfig) :
   allFedsHist_ = new TH1F(name1.c_str(),title1.c_str(),numBins,histRangeMin_,histRangeMax_);
   
   fedMap_ = new EcalFedMap();
+
+  
  
 }
 
@@ -296,6 +298,7 @@ EcalCosmicsHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     int ietaSM = maxDet.ietaSM();
     int iphiSM = maxDet.iphiSM();
 
+    int LM = ecalElectronicsMap->getLMNumber(maxDet) ;//FIX ME
     // print out some info
     LogWarning("EcalCosmicsHists") << "hit! " << " amp " << ampli  << " : " 
 					//<< fedMap_->getSliceFromFed(FEDid) 
@@ -378,6 +381,8 @@ EcalCosmicsHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
       if (ampli > minTimingAmp_) {
 	allFedsTimingHistECAL_->Fill(time);
 	allFedsTimingPhiEtaHistECAL_->Fill(iphi,ieta,time);
+        allFedsTimingTTHistECAL_->Fill(iphi,ieta,time);
+        allFedsTimingLMHistECAL_->Fill(LM,time);
       }      
       triggerExclusiveHist_->Fill(0);
     } 
@@ -388,6 +393,8 @@ EcalCosmicsHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
       if (ampli > minTimingAmp_) {
 	allFedsTimingHistHCAL_->Fill(time);
 	allFedsTimingPhiEtaHistHCAL_->Fill(iphi,ieta,time);
+        allFedsTimingTTHistHCAL_->Fill(iphi,ieta,time);
+        allFedsTimingLMHistHCAL_->Fill(LM,time);
       }      
       triggerExclusiveHist_->Fill(1);
     }
@@ -398,6 +405,8 @@ EcalCosmicsHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
       if (ampli > minTimingAmp_) {
 	allFedsTimingHistDT_->Fill(time);
 	allFedsTimingPhiEtaHistDT_->Fill(iphi,ieta,time);
+        allFedsTimingTTHistDT_->Fill(iphi,ieta,time);
+        allFedsTimingLMHistDT_->Fill(LM,time);
       }      
       triggerExclusiveHist_->Fill(2);
     }
@@ -408,6 +417,8 @@ EcalCosmicsHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
       if (ampli > minTimingAmp_) {
 	allFedsTimingHistRPC_->Fill(time);
 	allFedsTimingPhiEtaHistRPC_->Fill(iphi,ieta,time);
+        allFedsTimingTTHistRPC_->Fill(iphi,ieta,time);
+        allFedsTimingLMHistRPC_->Fill(LM,time);
       }      
       triggerExclusiveHist_->Fill(3);
     }
@@ -418,6 +429,8 @@ EcalCosmicsHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
       if (ampli > minTimingAmp_) {
 	allFedsTimingHistCSC_->Fill(time);
 	allFedsTimingPhiEtaHistCSC_->Fill(iphi,ieta,time);
+        allFedsTimingTTHistCSC_->Fill(iphi,ieta,time);
+        allFedsTimingLMHistCSC_->Fill(LM,time);
       }      
       triggerExclusiveHist_->Fill(4);
     }
@@ -439,6 +452,8 @@ EcalCosmicsHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
       timingHistVsModule->Fill(time, ietaSM);
       allFedsTimingPhiHist_->Fill(iphi,time);
       allFedsTimingPhiEtaHist_->Fill(iphi,ieta,time);
+      allFedsTimingTTHist_->Fill(iphi,ieta,time);
+      allFedsTimingLMHist_->Fill(LM,time);
       if (FEDid>=610&&FEDid<=627)  allFedsTimingPhiEbmHist_->Fill(iphi,time);
       if (FEDid>=628&&FEDid<=645)  allFedsTimingPhiEbpHist_->Fill(iphi,time);
 
@@ -463,6 +478,8 @@ EcalCosmicsHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 void EcalCosmicsHists::initHists(int FED)
 {
   using namespace std;
+
+  
   
   string FEDid = intToString(FED);
   string title1 = "Energy of Seed Crystal ";
@@ -544,6 +561,31 @@ EcalCosmicsHists::beginJob(const edm::EventSetup&)
 {
   //Here I will init some of the specific histograms
   int numBins = 200;//(int)round(histRangeMax_-histRangeMin_)+1;
+
+  double ttEtaBins[36] = {-85, -80, -75, -70, -65, -60, -55, -50, -45, -40, -35, -30, -25, -20, -15, -10, -5, 0, 1, 6, 11, 16, 21, 26, 31, 36, 41, 46, 51, 56, 61, 66, 71, 76, 81, 86 };
+  double modEtaBins[10]={-85, -65, -45, -25, 0, 1, 26, 46, 66, 86};
+  double ttPhiBins[73];
+  double modPhiBins[19];
+  double timingBins[79];
+  double highEBins[11];
+  for (int i = 0; i < 79; ++i)
+    {
+      timingBins[i]=-7.+double(i)*14./78.;
+      if (i<73) 
+	{
+          ttPhiBins[i]=1+5*i;
+          if ( i < 19) 
+	    {
+              modPhiBins[i]=1+20*i;
+              if (i < 11)
+		{
+		  highEBins[i]=10.+double(i)*20.;
+		}
+	    }
+	}
+     
+    }
+
   allFedsenergyHist_           = new TH1F("energy_AllClusters","energy_AllClusters;Cluster Energy (GeV)",numBins,histRangeMin_,histRangeMax_);
   allFedsenergyHighHist_       = new TH1F("energyHigh_AllClusters","energyHigh_AllClusters;Cluster Energy (GeV)",numBins,histRangeMin_,200.0);
   allFedsE2Hist_           = new TH1F("E2_AllClusters","E2_AllClusters;Seed+highest neighbor energy (GeV)",numBins,histRangeMin_,histRangeMax_);
@@ -557,17 +599,19 @@ EcalCosmicsHists::beginJob(const edm::EventSetup&)
   allFedsiEtaProfileHist_  = new TH1F("iEtaProfileAllEvents","iEta Profile all events;i#eta",172,-86,86);
   allOccupancy_            = new TH2F("OccupancyAllEvents","Occupancy all events;i#phi;i#eta",360,1.,361.,172,-86,86);
   TrueOccupancy_            = new TH2F("TrueOccupancyAllEvents","True Occupancy all events;#phi;#eta",360,-3.14159,3.14159,172,-1.5,1.5);
-  allOccupancyCoarse_      = new TH2F("OccupancyAllEventsCoarse","Occupancy all events Coarse;i#phi;i#eta",360/5,1,361.,172/5,-86,86);
-  TrueOccupancyCoarse_      = new TH2F("TrueOccupancyAllEventsCoarse","True Occupancy all events Coarse;#phi;#eta",360/5,-3.14159,3.14159,172/5,-1.5,1.5);
+  allOccupancyCoarse_      = new TH2F("OccupancyAllEventsCoarse","Occupancy all events Coarse;i#phi;i#eta",360/5,1,361.,35,ttEtaBins);
+  TrueOccupancyCoarse_      = new TH2F("TrueOccupancyAllEventsCoarse","True Occupancy all events Coarse;#phi;#eta",360/5,-3.14159,3.14159,34,-1.5,1.5);
   allOccupancyHighEnergy_            = new TH2F("OccupancyHighEnergyEvents","Occupancy high energy events;i#phi;i#eta",360,1.,361.,172,-86,86);
-  allOccupancyHighEnergyCoarse_      = new TH2F("OccupancyHighEnergyEventsCoarse","Occupancy high energy events Coarse;i#phi;i#eta",360/5,1,361.,172/5,-86,86);
-  allFedsOccupancyHighEnergyHist_    = new TH3F("OccupancyHighEnergyEvents3D","(Phi,Eta,energy) for all high energy events;i#phi;i#eta;energy (GeV)",18,1,361,8,-86,86,10,10,210);
+  allOccupancyHighEnergyCoarse_      = new TH2F("OccupancyHighEnergyEventsCoarse","Occupancy high energy events Coarse;i#phi;i#eta",360/5,1,361.,35,ttEtaBins);
+  allFedsOccupancyHighEnergyHist_    = new TH3F("OccupancyHighEnergyEvents3D","(Phi,Eta,energy) for all high energy events;i#phi;i#eta;energy (GeV)",18,modPhiBins,9,modEtaBins,10,highEBins);
   allFedsNumXtalsInE9Hist_ = new TH1F("NumXtalsInE9AllHist","Number of active Xtals in E9;NumXtals",10,0,10);
 
   allFedsTimingPhiHist_          = new TH2F("timePhiAllFEDs","time vs Phi for all FEDs (TT binning);i#phi;Relative Time (1 clock = 25ns)",72,1,361,78,-7,7);
   allFedsTimingPhiEbpHist_       = new TH2F("timePhiEBP","time vs Phi for FEDs in EB+ (TT binning) ;i#phi;Relative Time (1 clock = 25ns)",72,1,361,78,-7,7);
   allFedsTimingPhiEbmHist_       = new TH2F("timePhiEBM","time vs Phi for FEDs in EB- (TT binning);i#phi;Relative Time (1 clock = 25ns)",72,1,361,78,-7,7);
-  allFedsTimingPhiEtaHist_       = new TH3F("timePhiEtaAllFEDs","(Phi,Eta,time) for all FEDs (SM,M binning);i#phi;i#eta;Relative Time (1 clock = 25ns)",18,1,361,8,-86,86,78,-7,7);  
+  allFedsTimingPhiEtaHist_       = new TH3F("timePhiEtaAllFEDs","(Phi,Eta,time) for all FEDs (SM,M binning);i#phi;i#eta;Relative Time (1 clock = 25ns)",18,modPhiBins,9,modEtaBins,78,timingBins);  
+  allFedsTimingTTHist_           = new TH3F("timeTTAllFEDs","(Phi,Eta,time) for all FEDs (SM,TT binning);i#phi;i#eta;Relative Time (1 clock = 25ns)",72,ttPhiBins,35,ttEtaBins,78,timingBins); 
+  allFedsTimingLMHist_           = new TH2F("timeLMAllFEDs","(LM,time) for all FEDs (SM,LM binning);LM;Relative Time (1 clock = 25ns)",92, 1, 92,78,-7,7);
 
   allFedsTimingEbpHist_       = new TH1F("timeEBP","time for FEDs in EB+;Relative Time (1 clock = 25ns)",78,-7,7);
   allFedsTimingEbmHist_       = new TH1F("timeEBM","time for FEDs in EB-;Relative Time (1 clock = 25ns)",78,-7,7);
@@ -580,34 +624,44 @@ EcalCosmicsHists::beginJob(const edm::EventSetup&)
   numberofGoodEvtFreq_  = new TH1F("frequencyOfGoodEvents","Number of events with cosmic vs Event;Event Number;Number of Good Events/100 Events",2000,0,200000);
 
   allOccupancyECAL_            = new TH2F("OccupancyAllEvents_ECAL","Occupancy all events ECAL;i#phi;i#eta",360,1.,361.,172,-86,86);
-  allOccupancyCoarseECAL_      = new TH2F("OccupancyAllEventsCoarse_ECAL","Occupancy all events Coarse ECAL;i#phi;i#eta",360/5,1,361.,172/5,-86,86);
+  allOccupancyCoarseECAL_      = new TH2F("OccupancyAllEventsCoarse_ECAL","Occupancy all events Coarse ECAL;i#phi;i#eta",360/5,ttPhiBins,35, ttEtaBins);
   allFedsTimingHistECAL_       = new TH1F("timeForAllFeds_ECAL","timeForAllFeds ECAL;Relative Time (1 clock = 25ns)",78,-7,7);
-  allFedsTimingPhiEtaHistECAL_       = new TH3F("timePhiEtaAllFEDs_ECAL","ECAL (Phi,Eta,time) for all FEDs (SM,M binning);i#phi;i#eta;Relative Time (1 clock = 25ns)",18,1,361,8,-86,86,78,-7,7);  
+  allFedsTimingPhiEtaHistECAL_ = new TH3F("timePhiEtaAllFEDs_ECAL","ECAL (Phi,Eta,time) for all FEDs (SM,M binning);i#phi;i#eta;Relative Time (1 clock = 25ns)",18,modPhiBins,9, modEtaBins,78,timingBins); 
+  allFedsTimingTTHistECAL_     = new TH3F("timeTTAllFEDs_ECAL","ECAL (Phi,Eta,time) for all FEDs (SM,TT binning);i#phi;i#eta;Relative Time (1 clock = 25ns)",72,ttPhiBins,35,ttEtaBins,78,timingBins); 
+  allFedsTimingLMHistECAL_     = new TH2F("timeLMAllFEDs_ECAL","ECAL (LM,time) for all FEDs (SM,LM binning);LM;Relative Time (1 clock = 25ns)",92, 1, 92,78,-7,7); 
 
   allOccupancyDT_            = new TH2F("OccupancyAllEvents_DT","Occupancy all events DT;i#phi;i#eta",360,1.,361.,172,-86,86);
-  allOccupancyCoarseDT_      = new TH2F("OccupancyAllEventsCoarse_DT","Occupancy all events Coarse DT;i#phi;i#eta",360/5,1,361.,172/5,-86,86);
+  allOccupancyCoarseDT_      = new TH2F("OccupancyAllEventsCoarse_DT","Occupancy all events Coarse DT;i#phi;i#eta",360/5,1,361.,35,ttEtaBins);
   allFedsTimingHistDT_       = new TH1F("timeForAllFeds_DT","timeForAllFeds DT;Relative Time (1 clock = 25ns)",78,-7,7);
-  allFedsTimingPhiEtaHistDT_       = new TH3F("timePhiEtaAllFEDs_DT","DT (Phi,Eta,time) for all FEDs (SM,M binning);i#phi;i#eta;Relative Time (1 clock = 25ns)",18,1,361,8,-86,86,78,-7,7);  
+  allFedsTimingPhiEtaHistDT_ = new TH3F("timePhiEtaAllFEDs_DT","DT (Phi,Eta,time) for all FEDs (SM,M binning);i#phi;i#eta;Relative Time (1 clock = 25ns)",18,modPhiBins,9, modEtaBins,78,timingBins);  
+  allFedsTimingTTHistDT_   = new TH3F("timeTTAllFEDs_DT","DT (Phi,Eta,time) for all FEDs (SM,TT binning);i#phi;i#eta;Relative Time (1 clock = 25ns)",72,ttPhiBins,35,ttEtaBins,78,timingBins); 
+  allFedsTimingLMHistDT_   = new TH2F("timeLMAllFEDs_DT","DT (LM,time) for all FEDs (SM,LM binning);LM;Relative Time (1 clock = 25ns)",92, 1, 92,78,-7,7); 
 
   allOccupancyRPC_            = new TH2F("OccupancyAllEvents_RPC","Occupancy all events RPC;i#phi;i#eta",360,1.,361.,172,-86,86);
-  allOccupancyCoarseRPC_      = new TH2F("OccupancyAllEventsCoarse_RPC","Occupancy all events Coarse RPC;i#phi;i#eta",360/5,1,361.,172/5,-86,86);
+  allOccupancyCoarseRPC_      = new TH2F("OccupancyAllEventsCoarse_RPC","Occupancy all events Coarse RPC;i#phi;i#eta",360/5,1,361.,35, ttEtaBins);
   allFedsTimingHistRPC_       = new TH1F("timeForAllFeds_RPC","timeForAllFeds RPC;Relative Time (1 clock = 25ns)",78,-7,7);
-  allFedsTimingPhiEtaHistRPC_       = new TH3F("timePhiEtaAllFEDs_RPC","RPC (Phi,Eta,time) for all FEDs (SM,M binning);i#phi;i#eta;Relative Time (1 clock = 25ns)",18,1,361,8,-86,86,78,-7,7);  
+  allFedsTimingPhiEtaHistRPC_ = new TH3F("timePhiEtaAllFEDs_RPC","RPC (Phi,Eta,time) for all FEDs (SM,M binning);i#phi;i#eta;Relative Time (1 clock = 25ns)",18,modPhiBins,9, modEtaBins,78,timingBins);  
+  allFedsTimingTTHistRPC_     = new TH3F("timeTTAllFEDs_RPC","RPC (Phi,Eta,time) for all FEDs (SM,TT binning);i#phi;i#eta;Relative Time (1 clock = 25ns)",72,ttPhiBins,35,ttEtaBins,78,timingBins); 
+  allFedsTimingLMHistRPC_     = new TH2F("timeLMAllFEDs_RPC","RPC (LM,time) for all FEDs (SM,LM binning);LM;Relative Time (1 clock = 25ns)",92, 1, 92,78,-7,7); 
 
   allOccupancyCSC_            = new TH2F("OccupancyAllEvents_CSC","Occupancy all events CSC;i#phi;i#eta",360,1.,361.,172,-86,86);
-  allOccupancyCoarseCSC_      = new TH2F("OccupancyAllEventsCoarse_CSC","Occupancy all events Coarse CSC;i#phi;i#eta",360/5,1,361.,172/5,-86,86);
+  allOccupancyCoarseCSC_      = new TH2F("OccupancyAllEventsCoarse_CSC","Occupancy all events Coarse CSC;i#phi;i#eta",360/5,1,361.,35, ttEtaBins);
   allFedsTimingHistCSC_       = new TH1F("timeForAllFeds_CSC","timeForAllFeds CSC;Relative Time (1 clock = 25ns)",78,-7,7);
-  allFedsTimingPhiEtaHistCSC_       = new TH3F("timePhiEtaAllFEDs_CSC","CSC (Phi,Eta,time) for all FEDs (SM,M binning);i#phi;i#eta;Relative Time (1 clock = 25ns)",18,1,361,8,-86,86,78,-7,7);  
+  allFedsTimingPhiEtaHistCSC_ = new TH3F("timePhiEtaAllFEDs_CSC","CSC (Phi,Eta,time) for all FEDs (SM,M binning);i#phi;i#eta;Relative Time (1 clock = 25ns)",18,modPhiBins,9, modEtaBins,78,timingBins);  
+  allFedsTimingTTHistCSC_    = new TH3F("timeTTAllFEDs_CSC","CSC (Phi,Eta,time) for all FEDs (SM,TT binning);i#phi;i#eta;Relative Time (1 clock = 25ns)",72,ttPhiBins,35,ttEtaBins,78,timingBins); 
+  allFedsTimingLMHistCSC_    = new TH2F("timeLMAllFEDs_CSC","CSC (LM,time) for all FEDs (SM,LM binning);LM;Relative Time (1 clock = 25ns)",92, 1, 62,78,-7,7); 
 
   allOccupancyHCAL_            = new TH2F("OccupancyAllEvents_HCAL","Occupancy all events HCAL;i#phi;i#eta",360,1.,361.,172,-86,86);
-  allOccupancyCoarseHCAL_      = new TH2F("OccupancyAllEventsCoarse_HCAL","Occupancy all events Coarse HCAL;i#phi;i#eta",360/5,1,361.,172/5,-86,86);
+  allOccupancyCoarseHCAL_      = new TH2F("OccupancyAllEventsCoarse_HCAL","Occupancy all events Coarse HCAL;i#phi;i#eta",360/5,1,361.,35, ttEtaBins);
   allFedsTimingHistHCAL_       = new TH1F("timeForAllFeds_HCAL","timeForAllFeds HCAL;Relative Time (1 clock = 25ns)",78,-7,7);
-  allFedsTimingPhiEtaHistHCAL_       = new TH3F("timePhiEtaAllFEDs_HCAL","HCAL (Phi,Eta,time) for all FEDs (SM,M binning);i#phi;i#eta;Relative Time (1 clock = 25ns)",18,1,361,8,-86,86,78,-7,7);  
+  allFedsTimingPhiEtaHistHCAL_ = new TH3F("timePhiEtaAllFEDs_HCAL","HCAL (Phi,Eta,time) for all FEDs (SM,M binning);i#phi;i#eta;Relative Time (1 clock = 25ns)",18,modPhiBins,9, modEtaBins,78,timingBins);  
+  allFedsTimingTTHistHCAL_     = new TH3F("timeTTAllFEDs_HCAL","HCAL (Phi,Eta,time) for all FEDs (SM,TT binning);i#phi;i#eta;Relative Time (1 clock = 25ns)",72,ttPhiBins,35,ttEtaBins,78,timingBins); 
+  allFedsTimingLMHistHCAL_     = new TH2F("timeLMAllFEDs_HCAL","HCAL (LM,time) for all FEDs (SM,LM binning);LM;Relative Time (1 clock = 25ns)",92, 1, 92,78,-7,7); 
 
   triggerHist_ = new TH1F("triggerHist","Trigger Number",5,0,5);
   triggerExclusiveHist_ = new TH1F("triggerExclusiveHist","Trigger Number (Mutually Exclusive)",5,0,5);
 
-  runNumberHist_ = new TH1F("runNumberHist","Run Number",1,0,1);
+  runNumberHist_ = new TH1F("runNumberHist","Run Number",1,0,1);    
 
 }
 
@@ -713,32 +767,44 @@ EcalCosmicsHists::endJob()
   allFedsTimingEbpBottomHist_->Write();
   allFedsTimingEbmBottomHist_->Write();
   allFedsTimingPhiEtaHist_->Write();
+  allFedsTimingTTHist_->Write();
+  allFedsTimingLMHist_->Write();
   allFedsOccupancyHighEnergyHist_->Write();
   
   allOccupancyECAL_->Write();
   allOccupancyCoarseECAL_->Write();
   allFedsTimingPhiEtaHistECAL_->Write();
   allFedsTimingHistECAL_->Write();
+  allFedsTimingTTHistECAL_->Write();
+  allFedsTimingLMHistECAL_->Write();
 
   allOccupancyHCAL_->Write();
   allOccupancyCoarseHCAL_->Write();
   allFedsTimingPhiEtaHistHCAL_->Write();
   allFedsTimingHistHCAL_->Write();
+  allFedsTimingTTHistHCAL_->Write();
+  allFedsTimingLMHistHCAL_->Write();
 
   allOccupancyDT_->Write();
   allOccupancyCoarseDT_->Write();
   allFedsTimingPhiEtaHistDT_->Write();
   allFedsTimingHistDT_->Write();
+  allFedsTimingTTHistDT_->Write();
+  allFedsTimingLMHistDT_->Write();
 
   allOccupancyRPC_->Write();
   allOccupancyCoarseRPC_->Write();
   allFedsTimingPhiEtaHistRPC_->Write();
   allFedsTimingHistRPC_->Write();
+  allFedsTimingTTHistRPC_->Write();
+  allFedsTimingLMHistRPC_->Write();
 
   allOccupancyCSC_->Write();
   allOccupancyCoarseCSC_->Write();
   allFedsTimingPhiEtaHistCSC_->Write();
   allFedsTimingHistCSC_->Write();
+  allFedsTimingTTHistCSC_->Write();
+  allFedsTimingLMHistCSC_->Write();
 
   triggerHist_->Write();
   triggerExclusiveHist_->Write();

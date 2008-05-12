@@ -2,7 +2,7 @@ module ecalCosmicsHists = EcalCosmicsHists{
 
       InputTag ecalRecHitCollection = ecalRecHit:EcalRecHitsEB
 	  
-	  InputTag endcapClusterCollection      = cosmicBasicClusters:CosmicEndcapBasicClusters
+      InputTag endcapClusterCollection      = cosmicBasicClusters:CosmicEndcapBasicClusters
       InputTag barrelClusterCollection      = cosmicBasicClusters:CosmicBarrelBasicClusters
 	  
 
@@ -20,21 +20,15 @@ module ecalCosmicsHists = EcalCosmicsHists{
       untracked double histogramMaxRange = 1.8
 
       # parameter to specify histogram minimum range
+
       untracked double histogramMinRange = 0.0
-
-
+   
       # parameter for the name of the output root file with TH1F
       untracked string fileName = 'EcalCosmicsHists'
-
-      # parameter to specify minimum seed amplitude (ADC)
-      #untracked double MinSeedAmp = 5.0
-
-      # parameters to specify cosmics selection; algorithm rejects cosmics if:
-      # (ampli < MinCosmicE1) && (secondMin < MinCosmicE2) 
-      #untracked double MinCosmicE1 = 15.0
-      #untracked double MinCosmicE2 = 5.0
-      	
+   
+    
       # for filling timing histograms
+
       untracked double MinTimingAmp = 0.100
 
       # Global trigger tag
