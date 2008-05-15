@@ -373,6 +373,19 @@ EcalCosmicsHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
       allOccupancyHighEnergy_->Fill(iphi, ieta);
       allOccupancyHighEnergyCoarse_->Fill(iphi, ieta);    
       allFedsOccupancyHighEnergyHist_->Fill(iphi,ieta,energy);
+      LogWarning("EcalCosmicsHists") << "High energy event " << iEvent.id().run() << " : " 
+				     << iEvent.id().event() << " " << naiveEvtNum_  
+				     << " : " << energy << " " << numXtalsinE9 
+				     << " : " << iphi << " " << ieta 
+				     << " : " << isEcalL1 << isHCALL1 << isDTL1 << isRPCL1 << isCSCL1 ;
+      if (energy>100.0) {
+      LogWarning("EcalCosmicsHists") << "Very high energy event " << iEvent.id().run() << " : " 
+				     << iEvent.id().event() << " " << naiveEvtNum_  
+				     << " : " << energy << " " << numXtalsinE9 
+				     << " : " << iphi << " " << ieta 
+				     << " : " << isEcalL1 << isHCALL1 << isDTL1 << isRPCL1 << isCSCL1 ;
+      }
+      
     }
 
     if(isEcalL1&&!isDTL1&&!isRPCL1&&!isCSCL1&&!isHCALL1) {
