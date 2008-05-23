@@ -288,6 +288,8 @@ void EcalTPGAnalyzer::analyze(const edm::Event& iEvent, const  edm::EventSetup &
 	tE.fg_ = d.fineGrain() ;    
 	mapTower[TPtowid] = tE ;
       }
+
+      //if (d.compressedEt()>0) std::cout<<"Data (phi,eta, Et, i) ="<<TPtowid.iphi()<<" "<<TPtowid.ieta()<<" "<<d.compressedEt()<<std::endl ;
     }
   }
 
@@ -308,7 +310,13 @@ void EcalTPGAnalyzer::analyze(const edm::Event& iEvent, const  edm::EventSetup &
       for (int j=0 ; j<5 ; j++) tE.tpgEmul_[j] = (d[j].raw() & 0x1ff) ;
       mapTower[TPtowid] = tE ;
     }
+
+//     for (int j=0 ; j<5 ; j++) {
+//       if ((d[j].raw() & 0xff)>0) std::cout<<"Emulateur (phi,eta, Et, i) ="<<TPtowid.iphi()<<" "<<TPtowid.ieta()<<" "<<(d[j].raw() & 0xff)<<" "<<j<<std::endl ;
+//     }
   }
+
+
   
   // fill histograms
   fillShape(dfMax) ;
