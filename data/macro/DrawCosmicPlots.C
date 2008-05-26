@@ -1,7 +1,7 @@
 //
 // Macro to produce ECAL cosmic plots
 //
-void DrawCosmicPlots(Char_t* infile = 0, Int_t runNum=0, Char_t* fileType = "png", Bool_t printPics = kTRUE, Char_t* dirName = ".")
+void DrawCosmicPlots(Char_t* infile = 0, Int_t runNum=0, Bool_t printPics = kTRUE, Char_t* fileType = "png", Char_t* dirName = ".")
 {
 
   gROOT->SetStyle("Plain");
