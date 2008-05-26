@@ -94,7 +94,7 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
   std::map<int,TH1F*> FEDsAndTimingHists_;
   std::map<int,TH1F*> FEDsAndFrequencyHists_;
   std::map<int,TH1F*> FEDsAndiPhiProfileHists_;
-  std::map<int,TH1F*> FEDsAndNumXtalsInE9Hists_;
+  std::map<int,TH1F*> FEDsAndNumXtalsInClusterHists_;
   std::map<int,TH1F*> FEDsAndiEtaProfileHists_;
   std::map<int,TH2F*> FEDsAndTimingVsFreqHists_;
   std::map<int,TH2F*> FEDsAndTimingVsAmpHists_;
@@ -113,7 +113,7 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
   TH1F* allFedsFrequencyHist_;
   TH1F* allFedsiPhiProfileHist_;
   TH1F* allFedsiEtaProfileHist_;
-  TH1F* allFedsNumXtalsInE9Hist_;
+  TH1F* allFedsNumXtalsInClusterHist_;
   TH1F* numberofCosmicsHist_;
   TH1F* numberofGoodEvtFreq_;
 
@@ -143,6 +143,8 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
 
   TH2F* allOccupancyECAL_; 
   TH2F* allOccupancyCoarseECAL_; 
+  TH2F* allOccupancyExclusiveECAL_; 
+  TH2F* allOccupancyCoarseExclusiveECAL_; 
   TH1F* allFedsTimingHistECAL_;
   TH3F* allFedsTimingPhiEtaHistECAL_;
   TH3F* allFedsTimingTTHistECAL_;
@@ -150,6 +152,8 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
 
   TH2F* allOccupancyDT_; 
   TH2F* allOccupancyCoarseDT_; 
+  TH2F* allOccupancyExclusiveDT_; 
+  TH2F* allOccupancyCoarseExclusiveDT_; 
   TH1F* allFedsTimingHistDT_;
   TH3F* allFedsTimingPhiEtaHistDT_;
   TH3F* allFedsTimingTTHistDT_;
@@ -157,6 +161,8 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
 
   TH2F* allOccupancyRPC_; 
   TH2F* allOccupancyCoarseRPC_; 
+  TH2F* allOccupancyExclusiveRPC_; 
+  TH2F* allOccupancyCoarseExclusiveRPC_; 
   TH1F* allFedsTimingHistRPC_;
   TH3F* allFedsTimingPhiEtaHistRPC_;
   TH3F* allFedsTimingTTHistRPC_;
@@ -164,6 +170,8 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
 
   TH2F* allOccupancyCSC_; 
   TH2F* allOccupancyCoarseCSC_; 
+  TH2F* allOccupancyExclusiveCSC_; 
+  TH2F* allOccupancyCoarseExclusiveCSC_; 
   TH1F* allFedsTimingHistCSC_;
   TH3F* allFedsTimingPhiEtaHistCSC_;
   TH3F* allFedsTimingTTHistCSC_;
@@ -171,11 +179,15 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
 
   TH2F* allOccupancyHCAL_; 
   TH2F* allOccupancyCoarseHCAL_; 
+  TH2F* allOccupancyExclusiveHCAL_; 
+  TH2F* allOccupancyCoarseExclusiveHCAL_; 
   TH1F* allFedsTimingHistHCAL_;
   TH3F* allFedsTimingPhiEtaHistHCAL_;
   TH3F* allFedsTimingTTHistHCAL_;
   TH2F* allFedsTimingLMHistHCAL_;
 
+  TH1F* allFedsTimingHistEcalMuon_;
+  
   TH1F* triggerHist_;
   TH1F* triggerExclusiveHist_;
 
@@ -184,6 +196,16 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
   TH3F* allFedsOccupancyHighEnergyHist_;
 
   TH1F* runNumberHist_;
+
+  //new
+  /*
+  TH2F* HighEnergy_numcryFedId;
+  TH2F* HighEnergy_numcryiphi;  
+  TH3F* HighEnergy_energy3D;
+  TH2F* HighEnergy_energynumcry;
+  */
+  //
+
 
   EcalFedMap* fedMap_;
 
