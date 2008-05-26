@@ -37,8 +37,6 @@ echo "      -p|--path_file        file_path       data file to be analyzed prece
 echo ""
 echo "      -f|--first_ev         f_ev            first (as written to file) event that will be analyzed; default is 1"
 echo "      -l|--last_ev          l_ev            last  (as written to file) event that will be analyzed; default is 9999"
-#echo "      -fed|--fed_id         fed_id          selects FED id (601...654); default is all"
-#echo "      -eb|--ieb_id          ieb_id          selects sm barrel id(-1...-18,1...18); default is all"
 echo "      -cry|--cryGraph        hashedIndex     graphs from channels to be created"
 echo "      -amp|--ampCut         ampCutADC        digis will not be graphed unless the amplitude is over ampCutADC"
 echo ""
@@ -75,19 +73,9 @@ ampCutADC=13
                 first_event="$2"
                 ;;
 
-
       -l|--last_ev)
                 last_event="$2"
                 ;;
-
-
-      #-fed|--fed_id)
-      #          fed=$2
-      #          ;;
-
-      #-eb|--ieb_id)
-      #          ieb=$2
-      #          ;;
 
       -cry|--cryGraph)
                 cry_ic=$2
@@ -173,6 +161,7 @@ es_source src1 = EcalTrivialConditionRetriever{
 include "CaloOnlineTools/EcalTools/data/ecalPulseShapeGrapher.cfi"
   replace ecalPulseShapeGrapher.listChannels = {${cry_ic}}
   replace ecalPulseShapeGrapher.AmplitudeCutADC = $ampCutADC
+  replace ecalPulseShapeGrapher.rootFilename = "pulseShapeGrapher.$data_file.$$"
 
   path p = {ecalEBunpacker, ecalUncalibHit, ecalPulseShapeGrapher}
 
@@ -194,7 +183,7 @@ cmsRun "$cfg_path$data_file".graph.$$.cfg >& "$log_dir$data_file".$$.graph
 echo ""
 echo ""
 
-mv test.root log/pulseShapeGrapher.$data_file.$$.root
+mv pulseShapeGrapher.$data_file.$$.root log/
 echo "File root with graphs was created:" 
 ls -ltrFh $preferred_dir/log/pulseShapeGrapher.$data_file.$$.root | tail -1 | awk '{print $9}'
 
