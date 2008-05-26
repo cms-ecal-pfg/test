@@ -52,7 +52,7 @@ EcalCosmicsHists::EcalCosmicsHists(const edm::ParameterSet& iConfig) :
 {
   naiveEvtNum_ = 0;
   cosmicCounter_ = 0;
-
+  
   string title1 = "Seed Energy for All Feds; Seed Energy (GeV)";
   string name1 = "SeedEnergyAllFEDs";
   int numBins = 200;//(int)round(histRangeMax_-histRangeMin_)+1;
@@ -255,84 +255,84 @@ EcalCosmicsHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
      const reco::BasicClusterCollection *clusterCollection_p = bccHandle.product();
   for (reco::BasicClusterCollection::const_iterator clus = clusterCollection_p->begin(); clus != clusterCollection_p->end(); ++clus)
    {
-    double energy = clus->energy();
-	double phi    = clus->phi();
-	double eta    = clus->eta();
-    
-    double time = -1000.0;
-
-	double ampli = 0.;
-    double secondMin = 0.;
-    double secondTime = -1000.;
-    int numXtalsinCluster = 0;
-	
-	EBDetId maxDet;
-	EBDetId secDet;
-
-	std::vector<DetId> clusterDetIds = clus->getHitsByDetId();//get these from the cluster
-    for(std::vector<DetId>::const_iterator detitr = clusterDetIds.begin(); detitr != clusterDetIds.end(); ++detitr)
-      {
-	  //Here I use the "find" on a digi collection... I have been warned...
-	  if ((*detitr).det() != DetId::Ecal) { std::cout << " det is " <<(*detitr).det() << std::endl;continue;}
-	  if ((*detitr).subdetId() != EcalBarrel) {std::cout << " subdet is " <<(*detitr).subdetId() << std::endl; continue; }
-	  EcalRecHitCollection::const_iterator thishit = hits->find((*detitr));
-	  if (thishit == hits->end()) 
-	    {
-	      continue;
-	    }
-		//The checking above should no longer be needed...... as only those in the cluster would already have rechits..
-		
-	  EcalRecHit myhit = (*thishit);
-	    
-	  double thisamp = myhit.energy();
-      if (thisamp > 0.027) {numXtalsinCluster++; }
-	  if (thisamp > secondMin) {secondMin = thisamp; secondTime = myhit.time(); secDet = (EBDetId)(*detitr);}
-	  if (secondMin > ampli) {std::swap(ampli,secondMin); std::swap(time,secondTime); std::swap(maxDet,secDet);}
-     }
-
-    float E2 = ampli + secondMin;
-	EcalElectronicsId elecId = ecalElectronicsMap->getElectronicsId((EBDetId) maxDet);
-    int FEDid = 600+elecId.dccId();
+     double energy = clus->energy();
+     double phi    = clus->phi();
+     double eta    = clus->eta();
      
-    //if ((ampli < minCosmicE1_) && (secondMin < minCosmicE2_)) continue; //Posibly add a third && (numXtalsinenergy<3) TEST IT FIRST
-    numberOfCosmics++;
-
-    
-    //Set some more values
- 
-    int ieta = maxDet.ieta();
-    int iphi = maxDet.iphi();
-
-    int ietaSM = maxDet.ietaSM();
-    int iphiSM = maxDet.iphiSM();
-
-    int LM = ecalElectronicsMap->getLMNumber(maxDet) ;//FIX ME
-    // print out some info
-    LogWarning("EcalCosmicsHists") << "hit! " << " amp " << ampli  << " : " 
-					//<< fedMap_->getSliceFromFed(FEDid) 
-					//<< " : ic " <<  ic << " : hashedIndex " << hashedIndex 
-					<< " : ieta " << ieta << " iphi " << iphi 
-					<< " : nCosmics " << " " << cosmicCounter_ << " / " << naiveEvtNum_ << endl;      
-    
-    // fill the proper hist
-    TH1F* uRecHist = FEDsAndHists_[FEDid];
-    TH1F* E2uRecHist = FEDsAndE2Hists_[FEDid];
-    TH1F* energyuRecHist = FEDsAndenergyHists_[FEDid];
-    TH1F* timingHist = FEDsAndTimingHists_[FEDid];
-    TH1F* freqHist = FEDsAndFrequencyHists_[FEDid];
-    TH1F* iphiProfileHist = FEDsAndiPhiProfileHists_[FEDid];
-    TH1F* ietaProfileHist = FEDsAndiEtaProfileHists_[FEDid];
-    TH2F* timingHistVsFreq = FEDsAndTimingVsFreqHists_[FEDid];
-    TH2F* timingHistVsAmp = FEDsAndTimingVsAmpHists_[FEDid];
-    TH2F* E2vsE1uRecHist = FEDsAndE2vsE1Hists_[FEDid];
-    TH2F* energyvsE1uRecHist = FEDsAndenergyvsE1Hists_[FEDid];
-    TH1F* numXtalInClusterHist = FEDsAndNumXtalsInClusterHists_[FEDid];    
-    TH2F* occupHist = FEDsAndOccupancyHists_[FEDid];
-    TH2F* timingHistVsPhi = FEDsAndTimingVsPhiHists_[FEDid];
-    TH2F* timingHistVsModule = FEDsAndTimingVsModuleHists_[FEDid];
-
-    if(uRecHist==0)
-      {
+     double time = -1000.0;
+     
+     double ampli = 0.;
+     double secondMin = 0.;
+     double secondTime = -1000.;
+     int numXtalsinCluster = 0;
+     
+     EBDetId maxDet;
+     EBDetId secDet;
+     
+     std::vector<DetId> clusterDetIds = clus->getHitsByDetId();//get these from the cluster
+     for(std::vector<DetId>::const_iterator detitr = clusterDetIds.begin(); detitr != clusterDetIds.end(); ++detitr)
+       {
+	 //Here I use the "find" on a digi collection... I have been warned...
+	 if ((*detitr).det() != DetId::Ecal) { std::cout << " det is " <<(*detitr).det() << std::endl;continue;}
+	 if ((*detitr).subdetId() != EcalBarrel) {std::cout << " subdet is " <<(*detitr).subdetId() << std::endl; continue; }
+	 EcalRecHitCollection::const_iterator thishit = hits->find((*detitr));
+	 if (thishit == hits->end()) 
+	   {
+	     continue;
+	   }
+	 //The checking above should no longer be needed...... as only those in the cluster would already have rechits..
+	 
+	 EcalRecHit myhit = (*thishit);
+	 
+	 double thisamp = myhit.energy();
+	 if (thisamp > 0.027) {numXtalsinCluster++; }
+	 if (thisamp > secondMin) {secondMin = thisamp; secondTime = myhit.time(); secDet = (EBDetId)(*detitr);}
+	 if (secondMin > ampli) {std::swap(ampli,secondMin); std::swap(time,secondTime); std::swap(maxDet,secDet);}
+       }
+     
+     float E2 = ampli + secondMin;
+     EcalElectronicsId elecId = ecalElectronicsMap->getElectronicsId((EBDetId) maxDet);
+     int FEDid = 600+elecId.dccId();
+     
+     //if ((ampli < minCosmicE1_) && (secondMin < minCosmicE2_)) continue; //Posibly add a third && (numXtalsinenergy<3) TEST IT FIRST
+     numberOfCosmics++;
+     
+     
+     //Set some more values
+     
+     int ieta = maxDet.ieta();
+     int iphi = maxDet.iphi();
+     
+     int ietaSM = maxDet.ietaSM();
+     int iphiSM = maxDet.iphiSM();
+     
+     int LM = ecalElectronicsMap->getLMNumber(maxDet) ;//FIX ME
+     // print out some info
+     LogWarning("EcalCosmicsHists") << "hit! " << " amp " << ampli  << " : " 
+       //<< fedMap_->getSliceFromFed(FEDid) 
+       //<< " : ic " <<  ic << " : hashedIndex " << hashedIndex 
+				    << " : ieta " << ieta << " iphi " << iphi 
+				    << " : nCosmics " << " " << cosmicCounter_ << " / " << naiveEvtNum_ << endl;      
+     
+     // fill the proper hist
+     TH1F* uRecHist = FEDsAndHists_[FEDid];
+     TH1F* E2uRecHist = FEDsAndE2Hists_[FEDid];
+     TH1F* energyuRecHist = FEDsAndenergyHists_[FEDid];
+     TH1F* timingHist = FEDsAndTimingHists_[FEDid];
+     TH1F* freqHist = FEDsAndFrequencyHists_[FEDid];
+     TH1F* iphiProfileHist = FEDsAndiPhiProfileHists_[FEDid];
+     TH1F* ietaProfileHist = FEDsAndiEtaProfileHists_[FEDid];
+     TH2F* timingHistVsFreq = FEDsAndTimingVsFreqHists_[FEDid];
+     TH2F* timingHistVsAmp = FEDsAndTimingVsAmpHists_[FEDid];
+     TH2F* E2vsE1uRecHist = FEDsAndE2vsE1Hists_[FEDid];
+     TH2F* energyvsE1uRecHist = FEDsAndenergyvsE1Hists_[FEDid];
+     TH1F* numXtalInClusterHist = FEDsAndNumXtalsInClusterHists_[FEDid];    
+     TH2F* occupHist = FEDsAndOccupancyHists_[FEDid];
+     TH2F* timingHistVsPhi = FEDsAndTimingVsPhiHists_[FEDid];
+     TH2F* timingHistVsModule = FEDsAndTimingVsModuleHists_[FEDid];
+     
+     if(uRecHist==0)
+       {
 	initHists(FEDid);
 	uRecHist = FEDsAndHists_[FEDid];
 	E2uRecHist = FEDsAndE2Hists_[FEDid];
@@ -381,14 +381,7 @@ EcalCosmicsHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
       allOccupancyHighEnergy_->Fill(iphi, ieta);
       allOccupancyHighEnergyCoarse_->Fill(iphi, ieta);    
       allFedsOccupancyHighEnergyHist_->Fill(iphi,ieta,energy);
-      ////
-      /*
-      HighEnergy_numcryFedId->Fill(FEDid,numXtalsinCluster);
-      HighEnergy_numcryiphi->Fill(iphi,numXtalsinCluster);
-      HighEnergy_energy3D->Fill(iphi,ieta,energy);
-      HighEnergy_energynumcry->Fill(numXtalsinCluster,energy);
-      */
-      ////
+
       LogWarning("EcalCosmicsHists") << "High energy event " << iEvent.id().run() << " : " 
 				     << iEvent.id().event() << " " << naiveEvtNum_  
 				     << " : " << energy << " " << numXtalsinCluster
@@ -643,15 +636,6 @@ EcalCosmicsHists::beginJob(const edm::EventSetup&)
      
     }
 
-  //new high energy
-  /*
-  HighEnergy_numcryFedId = new TH2F("HighEnergy_numcryFedId","Num crystals in cluster vs FedId;FedId;num crystals",36,609.5,644.5,16,0,15);
-  HighEnergy_numcryiphi = new TH2F("HighEnergy_numcryiphi","Num crystals in cluster vs iphi;i#phi;num crystals",360,1.,361.,16,0,15);
-  HighEnergy_energy3D = new TH3F("HighEnergy_energy3D","(Phi,Eta,energy)'Coarse' for all high energy events;i#phi;i#eta;energy (GeV)",72,1,361,36,-85,86,50,0.,49.);
-  HighEnergy_energynumcry = new TH2F("HighEnergy_energynumcry","Energy in cluster vs Num crystals in cluster;num crystals;energy",12,1,11,300,0.,300.);
-  */
-  ///
-
 
   allFedsenergyHist_           = new TH1F("energy_AllClusters","energy_AllClusters;Cluster Energy (GeV)",numBins,histRangeMin_,histRangeMax_);
   allFedsenergyHighHist_       = new TH1F("energyHigh_AllClusters","energyHigh_AllClusters;Cluster Energy (GeV)",numBins,histRangeMin_,200.0);
@@ -787,45 +771,45 @@ EcalCosmicsHists::endJob()
       cerr << "EcalCosmicsHists: Error: This shouldn't happen!" << endl;
     }
 	
-	hist = FEDsAndFrequencyHists_[itr->first];
-	hist->Write();
-	
-	hist = FEDsAndiPhiProfileHists_[itr->first];
-	hist->Write();
-	
-	hist = FEDsAndiEtaProfileHists_[itr->first];
-	hist->Write();
-	
-	hist = FEDsAndE2Hists_[itr->first];
-	hist->Write();
-	
-	hist = FEDsAndenergyHists_[itr->first];
-	hist->Write();
-	
-	hist = FEDsAndNumXtalsInClusterHists_[itr->first];
-	hist->Write();
-	
-	TH2F* hist2 = FEDsAndTimingVsAmpHists_[itr->first];
-	hist2->Write();
-	
-	hist2 = FEDsAndTimingVsFreqHists_[itr->first];
-	hist2->Write();
-	
-	hist2 = FEDsAndE2vsE1Hists_[itr->first];
-	hist2->Write();
-	
-	hist2 = FEDsAndenergyvsE1Hists_[itr->first];
-	hist2->Write();
-
-	hist2 = FEDsAndOccupancyHists_[itr->first];
-	hist2->Write();
-
-	hist2 = FEDsAndTimingVsPhiHists_[itr->first];
-	hist2->Write();
-
-	hist2 = FEDsAndTimingVsModuleHists_[itr->first];
-	hist2->Write();
-
+    hist = FEDsAndFrequencyHists_[itr->first];
+    hist->Write();
+    
+    hist = FEDsAndiPhiProfileHists_[itr->first];
+    hist->Write();
+    
+    hist = FEDsAndiEtaProfileHists_[itr->first];
+    hist->Write();
+    
+    hist = FEDsAndE2Hists_[itr->first];
+    hist->Write();
+    
+    hist = FEDsAndenergyHists_[itr->first];
+    hist->Write();
+    
+    hist = FEDsAndNumXtalsInClusterHists_[itr->first];
+    hist->Write();
+    
+    TH2F* hist2 = FEDsAndTimingVsAmpHists_[itr->first];
+    hist2->Write();
+    
+    hist2 = FEDsAndTimingVsFreqHists_[itr->first];
+    hist2->Write();
+    
+    hist2 = FEDsAndE2vsE1Hists_[itr->first];
+    hist2->Write();
+    
+    hist2 = FEDsAndenergyvsE1Hists_[itr->first];
+    hist2->Write();
+    
+    hist2 = FEDsAndOccupancyHists_[itr->first];
+    hist2->Write();
+    
+    hist2 = FEDsAndTimingVsPhiHists_[itr->first];
+    hist2->Write();
+    
+    hist2 = FEDsAndTimingVsModuleHists_[itr->first];
+    hist2->Write();
+    
     root_file_.cd();
   }
   allFedsHist_->Write();
@@ -911,14 +895,6 @@ EcalCosmicsHists::endJob()
   triggerHist_->Write();
   triggerExclusiveHist_->Write();
 
-  //new high energy
-  /*
-  HighEnergy_numcryFedId->Write();
-  HighEnergy_numcryiphi->Write();  
-  HighEnergy_energy3D->Write();
-  HighEnergy_energynumcry->Write();
-  */
-  //
 
   numberofCosmicsHist_->Write();
   numberofGoodEvtFreq_->Write();

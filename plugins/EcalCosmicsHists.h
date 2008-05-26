@@ -197,16 +197,6 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
 
   TH1F* runNumberHist_;
 
-  //new
-  /*
-  TH2F* HighEnergy_numcryFedId;
-  TH2F* HighEnergy_numcryiphi;  
-  TH3F* HighEnergy_energy3D;
-  TH2F* HighEnergy_energynumcry;
-  */
-  //
-
-
   EcalFedMap* fedMap_;
 
   TFile* file;
