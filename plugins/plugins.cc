@@ -11,7 +11,7 @@
 #include "CaloOnlineTools/EcalTools/plugins/EcalTPGAnalyzer.h"
 #include "CaloOnlineTools/EcalTools/plugins/EcalHexDisplay.h"
 #include "CaloOnlineTools/EcalTools/plugins/EcalPulseShapeGrapher.h"
-#include "CaloOnlineTools/EcalTools/plugins/EcalHighEnFltr.h"
+#include "CaloOnlineTools/EcalTools/plugins/EcalHighEnCosmicFilter.h"
 
 DEFINE_FWK_MODULE(EcalDigiDisplay);
 DEFINE_FWK_MODULE(EcalPnGraphs);
@@ -25,4 +25,4 @@ DEFINE_FWK_MODULE(EcalCosmicsHists);
 DEFINE_FWK_MODULE(EcalTPGAnalyzer);
 DEFINE_FWK_MODULE(EcalHexDisplay);
 DEFINE_FWK_MODULE(EcalPulseShapeGrapher);
-DEFINE_FWK_MODULE(EcalHighEnFltr);
+DEFINE_FWK_MODULE(EcalHighEnCosmicFilter);
