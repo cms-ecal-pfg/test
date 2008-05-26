@@ -33,7 +33,10 @@
 EcalPulseShapeGrapher::EcalPulseShapeGrapher(const edm::ParameterSet& iConfig) :
 EBUncalibratedRecHitCollection_ (iConfig.getParameter<edm::InputTag>("EBUncalibratedRecHitCollection")),
 EBDigis_ (iConfig.getParameter<edm::InputTag>("EBDigiCollection")),
-ampCut_ (iConfig.getUntrackedParameter<int>("AmplitudeCutADC", 13))
+EEUncalibratedRecHitCollection_ (iConfig.getParameter<edm::InputTag>("EEUncalibratedRecHitCollection")),
+EEDigis_ (iConfig.getParameter<edm::InputTag>("EEDigiCollection")),
+ampCut_ (iConfig.getUntrackedParameter<int>("AmplitudeCutADC", 13)),
+rootFilename_ (iConfig.getUntrackedParameter<std::string>("rootFilename","pulseShapeGrapher"))
 {
    //now do what ever initialization is needed
 
@@ -53,16 +56,6 @@ ampCut_ (iConfig.getUntrackedParameter<int>("AmplitudeCutADC", 13))
      cutAmpHistMap_[*itr] = new TH1F(name.c_str(),title.c_str(),100,0,100);
      cutAmpHistMap_[*itr]->GetXaxis()->SetTitle("ADC");
 
-     title = "SNP amplitude of cry "+intToString(*itr);
-     name = "SNPampOfCry"+intToString(*itr);
-     snpAmpHistMap_[*itr] = new TH1F(name.c_str(),title.c_str(),100,0,100);
-     snpAmpHistMap_[*itr]->GetXaxis()->SetTitle("ADC");
-     
-     title = "Cosmic amplitude of cry "+intToString(*itr);
-     name = "cosmicAmpOfCry"+intToString(*itr);
-     cosmicAmpHistMap_[*itr] = new TH1F(name.c_str(),title.c_str(),100,0,100);
-     cosmicAmpHistMap_[*itr]->GetXaxis()->SetTitle("ADC");
-     
      title = "Pulse shape of cry "+intToString(*itr);
      name = "PulseShapeCry"+intToString(*itr);
      pulseShapeHistMap_[*itr] = new TH2F(name.c_str(),title.c_str(),10,0,10,220,-20,2);
@@ -72,16 +65,6 @@ ampCut_ (iConfig.getUntrackedParameter<int>("AmplitudeCutADC", 13))
      name = "RawPulseShapeCry"+intToString(*itr);
      rawPulseShapeHistMap_[*itr] = new TH2F(name.c_str(),title.c_str(),10,0,10,500,0,500);
      rawPulseShapeHistMap_[*itr]->GetXaxis()->SetTitle("sample");
-     
-     title = "Ped Max Pulse shape of cry "+intToString(*itr);
-     name = "PedMaxPulseShapeCry"+intToString(*itr);
-     pedMaxPulseShapeHistMap_[*itr] = new TH2F(name.c_str(),title.c_str(),10,0,10,1000,-50,50);
-     pedMaxPulseShapeHistMap_[*itr]->GetXaxis()->SetTitle("sample");
-     
-     title = "Non-ped max Pulse shape of cry "+intToString(*itr);
-     name = "NonPedMaxPulseShapeCry"+intToString(*itr);
-     nonPedMaxPulseShapeHistMap_[*itr] = new TH2F(name.c_str(),title.c_str(),10,0,10,1000,-50,50);
-     nonPedMaxPulseShapeHistMap_[*itr]->GetXaxis()->SetTitle("sample");
      
      title = "Amplitude of first sample, cry "+intToString(*itr);
      name = "AmpOfFirstSampleCry"+intToString(*itr);
@@ -117,29 +100,30 @@ EcalPulseShapeGrapher::analyze(const edm::Event& iEvent, const edm::EventSetup& 
    using namespace std;
 
    int numHitsWithActivity = 0;
-   //int numCosmicsInEvent = 0;
-   //int numMonstersInEvent = 0;
    
    //int eventNum = iEvent.id().event();
    //vector<EcalUncalibratedRecHit> sampleHitsPastCut;
    
-   Handle<EcalUncalibratedRecHitCollection> sampleHits;
-   iEvent.getByLabel(EBUncalibratedRecHitCollection_, sampleHits);
+   Handle<EcalUncalibratedRecHitCollection> EBHits;
+   iEvent.getByLabel(EBUncalibratedRecHitCollection_, EBHits);
+   Handle<EcalUncalibratedRecHitCollection> EEHits;
+   iEvent.getByLabel(EEUncalibratedRecHitCollection_, EEHits);
    //cout << "event: " << eventNum << " sample hits collection size: " << sampleHits->size() << endl;
    //Handle<EcalUncalibratedRecHitCollection> fittedHits;
    //iEvent.getByLabel(FittedUncalibratedRecHitCollection_, fittedHits);
-   Handle<EBDigiCollection>  digis;
-   iEvent.getByLabel(EBDigis_, digis);
+   Handle<EBDigiCollection>  EBdigis;
+   iEvent.getByLabel(EBDigis_, EBdigis);
+   Handle<EEDigiCollection>  EEdigis;
+   iEvent.getByLabel(EEDigis_, EEdigis);
    //cout << "event: " << eventNum << " digi collection size: " << digis->size() << endl;
 
    auto_ptr<EcalElectronicsMapping> ecalElectronicsMap(new EcalElectronicsMapping);
 
-   // Loop over the max-min hits
-   for(EcalUncalibratedRecHitCollection::const_iterator hitItr = sampleHits->begin(); hitItr != sampleHits->end(); ++hitItr)
+   // Loop over the hits
+   for(EcalUncalibratedRecHitCollection::const_iterator hitItr = EBHits->begin(); hitItr != EBHits->end(); ++hitItr)
    {
      EcalUncalibratedRecHit hit = (*hitItr);
      float amplitude = hit.amplitude();
-
      EBDetId hitDetId = hit.id();
 
      // Get the Fedid
@@ -155,88 +139,122 @@ EcalPulseShapeGrapher::analyze(const edm::Event& iEvent, const edm::EventSetup& 
      if(itr==listChannels_.end())
        continue;
 
-     // Get the Fedid
-     //EcalElectronicsId elecId = ecalElectronicsMap->getElectronicsId(hitDetId);
-     //int FEDid = 600+elecId.dccId();
-     //string SMname = fedMap_->getSliceFromFed(FEDid);
-
      ampHistMap_[hitDetId.hashedIndex()]->Fill(amplitude);
      //cout << "Cry hash:" << hitDetId.hashedIndex() << " amplitude: " << amplitude << endl;
-
      if(amplitude < ampCut_)
        continue;
 
      cutAmpHistMap_[hitDetId.hashedIndex()]->Fill(amplitude);
-     
-     // Hit is probably a signal
      numHitsWithActivity++;
-     EBDigiCollection::const_iterator digiItr= digis->begin();
-     while(digiItr != digis->end() && digiItr->id() != hitItr->id())
+     EBDigiCollection::const_iterator digiItr= EBdigis->begin();
+     while(digiItr != EBdigis->end() && digiItr->id() != hitItr->id())
      {
        digiItr++;
      }
-     if(digiItr == digis->end())
+     if(digiItr == EBdigis->end())
        continue;
 
-     EBDataFrame df(*digiItr); 
-     int delta1 = abs(df.sample(1).adc()-df.sample(0).adc());
-     int delta2 = abs(df.sample(2).adc()-df.sample(1).adc());
-     // check the min/max amp. sample indices
-     // I moved this from inside the if with the deltas
-     int maxSampleAmp = -1000;
-     int maxSampleIndex = -1;
-     int minSampleAmp = 10000;
-     int minSampleIndex = -1;
-     for(int i=0; i<10; ++i)
-     {
-       if(df.sample(i).adc() > maxSampleAmp && !isnan(df.sample(i).adc()))
-       {
-         maxSampleAmp = df.sample(i).adc();
-         maxSampleIndex = i;
-       }
-       if(df.sample(i).adc() < minSampleAmp && !isnan(df.sample(i).adc()))
-       {
-         minSampleAmp = df.sample(i).adc();
-         minSampleIndex = i;
-       }
+     double sampleADC[10];
+     EBDataFrame df(*digiItr);
+     double pedestal = 200;
+
+     if(df.sample(0).gainId()!=1 || df.sample(1).gainId()!=1) continue; //goes to the next digi
+     else {
+       sampleADC[0] = df.sample(0).adc();
+       sampleADC[1] = df.sample(1).adc();
+       pedestal = (double)(sampleADC[0]+sampleADC[1])/(double)2;
+     } 
+
+     for (int i=0; (unsigned int)i< digiItr->size(); ++i ) {
+       EBDataFrame df(*digiItr);
+       double gain = 12.;
+       if(df.sample(i).gainId()==1)
+         gain = 1.;
+       else if(df.sample(i).gainId()==2)
+         gain = 2.;
+       sampleADC[i] = pedestal+(df.sample(i).adc()-pedestal)*gain;
      }
 
      //cout << "1) maxsample amp:" << maxSampleAmp << " maxSampleIndex:" << maxSampleIndex << endl;
-     int baseline = (df.sample(0).adc()+df.sample(1).adc()+df.sample(2).adc())/3;
      for(int i=0; i<10;++i)
      {
        //cout << "Filling hist for:" << hitDetId.hashedIndex() << " with sample:" << i 
          //<< " amp:" <<(float)(df.sample(i).adc()-baseline)/(maxSampleAmp-baseline) << endl;
        //cout << "ADC of sample:" << df.sample(i).adc() << " baseline:" << baseline << " maxSampleAmp:" 
          //<< maxSampleAmp << endl << endl;
-       pulseShapeHistMap_[hitDetId.hashedIndex()]->Fill(i, (float)(df.sample(i).adc()-baseline)/(maxSampleAmp-baseline));
-       rawPulseShapeHistMap_[hitDetId.hashedIndex()]->Fill(i, (float)(df.sample(i).adc()));
-       if(maxSampleIndex<2)
-         pedMaxPulseShapeHistMap_[hitDetId.hashedIndex()]->Fill(i, (float)(df.sample(i).adc()-baseline)/(maxSampleAmp-baseline));
-       else
-         nonPedMaxPulseShapeHistMap_[hitDetId.hashedIndex()]->Fill(i, (float)(df.sample(i).adc()-baseline)/(maxSampleAmp-baseline));
+       pulseShapeHistMap_[hitDetId.hashedIndex()]->Fill(i, (float)(sampleADC[i]-pedestal)/amplitude);
+       rawPulseShapeHistMap_[hitDetId.hashedIndex()]->Fill(i, (float)(sampleADC[i]));
      }
+     firstSampleHistMap_[hitDetId.hashedIndex()]->Fill(sampleADC[0]);
+   }
 
-     firstSampleHistMap_[hitDetId.hashedIndex()]->Fill(df.sample(0).adc());
+   // Now do the same for the EE hits
+   for(EcalUncalibratedRecHitCollection::const_iterator hitItr = EEHits->begin(); hitItr != EEHits->end(); ++hitItr)
+   {
+     EcalUncalibratedRecHit hit = (*hitItr);
+     float amplitude = hit.amplitude();
+     EEDetId hitDetId = hit.id();
+
+     // Get the Fedid
+     EcalElectronicsId elecId = ecalElectronicsMap->getElectronicsId(hitDetId);
+     int FEDid = 600+elecId.dccId();
+     string SMname = fedMap_->getSliceFromFed(FEDid);
      
-     if(delta1 < 3 || delta2 < 3)
+     vector<int>::const_iterator itr = listChannels_.begin();
+     while(itr != listChannels_.end() && (*itr) != hitDetId.hashedIndex())
      {
-       // could it be a cosmic hit?
-
-       if(!(maxSampleIndex > 6 || maxSampleIndex < 4) && minSampleIndex < 3)
-       {
-         cosmicAmpHistMap_[hitDetId.hashedIndex()]->Fill(amplitude);
-       }
-       else // when max/min sample check is out of range, but deltas are ok
-       {
-         snpAmpHistMap_[hitDetId.hashedIndex()]->Fill(amplitude);
-       }
+       itr++;
      }
-     else
+     if(itr==listChannels_.end())
+       continue;
+
+     ampHistMap_[hitDetId.hashedIndex()]->Fill(amplitude);
+     //cout << "Cry hash:" << hitDetId.hashedIndex() << " amplitude: " << amplitude << endl;
+     if(amplitude < ampCut_)
+       continue;
+
+     cutAmpHistMap_[hitDetId.hashedIndex()]->Fill(amplitude);
+     numHitsWithActivity++;
+     EEDigiCollection::const_iterator digiItr= EEdigis->begin();
+     while(digiItr != EEdigis->end() && digiItr->id() != hitItr->id())
      {
-       snpAmpHistMap_[hitDetId.hashedIndex()]->Fill(amplitude);
+       digiItr++;
+     }
+     if(digiItr == EEdigis->end())
+       continue;
+
+     double sampleADC[10];
+     EEDataFrame df(*digiItr);
+     double pedestal = 200;
+
+     if(df.sample(0).gainId()!=1 || df.sample(1).gainId()!=1) continue; //goes to the next digi
+     else {
+       sampleADC[0] = df.sample(0).adc();
+       sampleADC[1] = df.sample(1).adc();
+       pedestal = (double)(sampleADC[0]+sampleADC[1])/(double)2;
+     } 
+
+     for (int i=0; (unsigned int)i< digiItr->size(); ++i ) {
+       EEDataFrame df(*digiItr);
+       double gain = 12.;
+       if(df.sample(i).gainId()==1)
+         gain = 1.;
+       else if(df.sample(i).gainId()==2)
+         gain = 2.;
+       sampleADC[i] = pedestal+(df.sample(i).adc()-pedestal)*gain;
      }
 
+     //cout << "1) maxsample amp:" << maxSampleAmp << " maxSampleIndex:" << maxSampleIndex << endl;
+     for(int i=0; i<10;++i)
+     {
+       //cout << "Filling hist for:" << hitDetId.hashedIndex() << " with sample:" << i 
+         //<< " amp:" <<(float)(df.sample(i).adc()-baseline)/(maxSampleAmp-baseline) << endl;
+       //cout << "ADC of sample:" << df.sample(i).adc() << " baseline:" << baseline << " maxSampleAmp:" 
+         //<< maxSampleAmp << endl << endl;
+       pulseShapeHistMap_[hitDetId.hashedIndex()]->Fill(i, (float)(sampleADC[i]-pedestal)/amplitude);
+       rawPulseShapeHistMap_[hitDetId.hashedIndex()]->Fill(i, (float)(sampleADC[i]));
+     }
+     firstSampleHistMap_[hitDetId.hashedIndex()]->Fill(sampleADC[0]);
    }
 }
 
@@ -251,26 +269,23 @@ EcalPulseShapeGrapher::beginJob(const edm::EventSetup&)
 void 
 EcalPulseShapeGrapher::endJob() {
   
-   file_ = new TFile("test.root","RECREATE");
+   rootFilename_+=".root";
+   file_ = new TFile(rootFilename_.c_str(),"RECREATE");
    TH1::AddDirectory(false);
-   
   
    for(std::vector<int>::const_iterator itr = listChannels_.begin(); itr != listChannels_.end(); ++itr)
    {
      ampHistMap_[*itr]->Write();
      cutAmpHistMap_[*itr]->Write();
-     cosmicAmpHistMap_[*itr]->Write();
-     snpAmpHistMap_[*itr]->Write();
      firstSampleHistMap_[*itr]->Write();
 
-     pulseShapeHistMap_[*itr]->Write();
      rawPulseShapeHistMap_[*itr]->Write();
      TProfile* t2 = (TProfile*) (rawPulseShapeHistMap_[*itr]->ProfileX());
      t2->Write();
-     pedMaxPulseShapeHistMap_[*itr]->Write();
-     nonPedMaxPulseShapeHistMap_[*itr]->Write();
-     TProfile* t1 = (TProfile*) (pulseShapeHistMap_[*itr]->ProfileX());
-     t1->Write();
+     //TODO: fix the normalization so these are correct
+     //pulseShapeHistMap_[*itr]->Write();
+     //TProfile* t1 = (TProfile*) (pulseShapeHistMap_[*itr]->ProfileX());
+     //t1->Write();
    }
 
    

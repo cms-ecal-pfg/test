@@ -59,20 +59,20 @@ class EcalPulseShapeGrapher : public edm::EDAnalyzer {
 
       edm::InputTag EBUncalibratedRecHitCollection_;
       edm::InputTag EBDigis_;
+      edm::InputTag EEUncalibratedRecHitCollection_;
+      edm::InputTag EEDigis_;
+
       int abscissa[10];
       int ordinate[10];
       std::vector<int> listChannels_;
       std::map<int,TH1F*> ampHistMap_;
-      std::map<int,TH1F*> snpAmpHistMap_;
-      std::map<int,TH1F*> cosmicAmpHistMap_;
       std::map<int,TH2F*> pulseShapeHistMap_;
       std::map<int,TH1F*> firstSampleHistMap_;
       std::map<int,TH2F*> rawPulseShapeHistMap_;
-      std::map<int,TH2F*> pedMaxPulseShapeHistMap_;
-      std::map<int,TH2F*> nonPedMaxPulseShapeHistMap_;
       std::map<int,TH1F*> cutAmpHistMap_;
       
       int ampCut_;
+      std::string rootFilename_;
 
       TFile* file_;
          
