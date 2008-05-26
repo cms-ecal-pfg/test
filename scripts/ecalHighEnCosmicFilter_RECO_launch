@@ -1,0 +1,7 @@
+echo "starting cmsrun"
+date
+
+bsub -q8nh ecalHighEnCosmicFilter_RECO.csh ecalHighEnCosmicFilter.cfg /tmp/HighEnEventSkim_43576.txt /afs/cern.ch/cms/CAF/CMSCOMM/COMM_ECAL/ccecal/CRUZET_devel/src/CaloOnlineTools/EcalTools/test /tmp/HighEnEventSkim_43576.root /castor/cern.ch/user/s/serena/
+
+echo `date`
+
