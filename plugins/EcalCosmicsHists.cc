@@ -304,11 +304,11 @@ EcalCosmicsHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
      
      int LM = ecalElectronicsMap->getLMNumber(maxDet) ;//FIX ME
      // print out some info
-     LogWarning("EcalCosmicsHists") << "hit! " << " amp " << ampli  << " : " 
-       //<< fedMap_->getSliceFromFed(FEDid) 
-       //<< " : ic " <<  ic << " : hashedIndex " << hashedIndex 
-				    << " : ieta " << ieta << " iphi " << iphi 
-				    << " : nCosmics " << " " << cosmicCounter_ << " / " << naiveEvtNum_ << endl;      
+     //     LogWarning("EcalCosmicsHists") << "hit! " << " amp " << ampli  << " : " 
+     //       //<< fedMap_->getSliceFromFed(FEDid) 
+     //       //<< " : ic " <<  ic << " : hashedIndex " << hashedIndex 
+     //				    << " : ieta " << ieta << " iphi " << iphi 
+     //				    << " : nCosmics " << " " << cosmicCounter_ << " / " << naiveEvtNum_ << endl;      
      
      // fill the proper hist
      TH1F* uRecHist = FEDsAndHists_[FEDid];
