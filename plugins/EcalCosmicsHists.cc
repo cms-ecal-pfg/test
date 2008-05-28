@@ -44,11 +44,8 @@ EcalCosmicsHists::EcalCosmicsHists(const edm::ParameterSet& iConfig) :
   runNum_(-1),
   histRangeMax_ (iConfig.getUntrackedParameter<double>("histogramMaxRange",1.8)),
   histRangeMin_ (iConfig.getUntrackedParameter<double>("histogramMinRange",0.0)),
-  minSeedAmp_ (iConfig.getUntrackedParameter<double>("MinSeedAmp",5.0)),
   minTimingAmp_ (iConfig.getUntrackedParameter<double>("MinTimingAmp",.100)),
-  fileName_ (iConfig.getUntrackedParameter<std::string>("fileName", std::string("ecalCosmicHists"))),
-  minCosmicE1_ (iConfig.getUntrackedParameter<double>("MinCosmicE1", 15.0)),
-  minCosmicE2_ (iConfig.getUntrackedParameter<double>("MinCosmicE2", 5.0))
+  fileName_ (iConfig.getUntrackedParameter<std::string>("fileName", std::string("ecalCosmicHists")))
 {
   naiveEvtNum_ = 0;
   cosmicCounter_ = 0;
@@ -294,7 +291,6 @@ EcalCosmicsHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
      EcalElectronicsId elecId = ecalElectronicsMap->getElectronicsId((EBDetId) maxDet);
      int FEDid = 600+elecId.dccId();
      
-     //if ((ampli < minCosmicE1_) && (secondMin < minCosmicE2_)) continue; //Posibly add a third && (numXtalsinenergy<3) TEST IT FIRST
      numberOfCosmics++;
      
      

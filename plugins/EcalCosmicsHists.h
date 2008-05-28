@@ -81,7 +81,6 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
   
   int runNum_;
   double histRangeMax_, histRangeMin_;
-  double minSeedAmp_;
   double minTimingAmp_;
   
   double *ttEtaBins;
@@ -200,9 +199,6 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
   EcalFedMap* fedMap_;
 
   TFile* file;
-
-  double minCosmicE1_;
-  double minCosmicE2_;
   
   int naiveEvtNum_; 
   int cosmicCounter_;
