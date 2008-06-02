@@ -54,6 +54,15 @@
 #include "TNtuple.h"
 
 
+// *** for TrackAssociation
+#include "DataFormats/TrackReco/interface/Track.h"
+#include "DataFormats/Common/interface/Handle.h"
+#include "TrackingTools/TrackAssociator/interface/TrackDetectorAssociator.h"
+#include "TrackingTools/TrackAssociator/interface/TrackAssociatorParameters.h"
+#include "DataFormats/EcalDetId/interface/EcalSubdetector.h"
+#include "DataFormats/EcalDetId/interface/EBDetId.h"
+// ***
+
 //
 // class declaration
 //
@@ -71,8 +80,8 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
       std::string intToString(int num);
       void initHists(int);
 
-    // ----------member data ---------------------------
-
+  // ----------member data ---------------------------
+  
   edm::InputTag ecalRecHitCollection_;
   edm::InputTag barrelClusterCollection_;
   edm::InputTag endcapClusterCollection_;
@@ -114,6 +123,7 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
   TH1F* allFedsiEtaProfileHist_;
   TH1F* allFedsNumXtalsInClusterHist_;
   TH1F* numberofCosmicsHist_;
+  TH1F* numberofCosmicsWTrackHist_;
   TH1F* numberofGoodEvtFreq_;
 
   TH2F* allFedsE2vsE1Hist_;
@@ -195,6 +205,24 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
   TH3F* allFedsOccupancyHighEnergyHist_;
 
   TH1F* runNumberHist_;
+  TH1F* deltaRHist_;
+  TH1F* deltaEtaHist_;
+  TH1F* deltaPhiHist_;
+  TH1F* ratioAssocTracksHist_;
+  TH1F* ratioAssocClustersHist_;
+  TH2F* deltaEtaDeltaPhiHist_;
+  TH2F* seedTrackPhiHist_;
+  TH2F* seedTrackEtaHist_;
+
+  // track association
+  TH2F* trackAssoc_muonsEcal_;
+  TrackDetectorAssociator trackAssociator_;
+  TrackAssociatorParameters trackParameters_;
+  TH1F* numberofCrossedEcalIdsHist_;
+
+  // top & bottom
+  TH1F* numberofCosmicsTopBottomHist_;
+  int cosmicCounterTopBottom_;
 
   EcalFedMap* fedMap_;
 
@@ -205,4 +233,5 @@ class EcalCosmicsHists : public edm::EDAnalyzer {
 
   std::vector<int> l1Accepts_;
   std::vector<std::string> l1Names_;
+
 };

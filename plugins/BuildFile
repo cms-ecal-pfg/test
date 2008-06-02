@@ -12,6 +12,7 @@
 <use name=Geometry/CaloTopology>
 <use name=Geometry/CaloEventSetup>
 <use name=PhysicsTools/UtilAlgos>
+<use name=TrackingTools/TrackAssociator>
 <use name=root>
 <use name=rootcore>
 <library file="plugins.cc EcalDCCHeaderDisplay.cc EcalDigiDisplay.cc EcalMipGraphs.cc EcalMipHists.cc EcalPedHists.cc EcalPnGraphs.cc EcalURecHitHists.cc EcalCosmicsHists.cc EcalChannelAnalyzer.cc EcalTPGAnalyzer.cc EcalHexDisplay.cc EcalPulseShapeGrapher.cc EcalHighEnCosmicFilter.cc EcalExclusiveTrigFilter.cc" name=CaloOnlineToolsEcalToolsPlugins>

@@ -49,6 +49,12 @@ EcalCosmicsHists::EcalCosmicsHists(const edm::ParameterSet& iConfig) :
 {
   naiveEvtNum_ = 0;
   cosmicCounter_ = 0;
+  cosmicCounterTopBottom_ = 0;
+
+  // TrackAssociator parameters
+  edm::ParameterSet trkParameters = iConfig.getParameter<edm::ParameterSet>("TrackAssociatorParameters");
+  trackParameters_.loadParameters( trkParameters );
+  trackAssociator_.useDefaultPropagator();
   
   string title1 = "Seed Energy for All Feds; Seed Energy (GeV)";
   string name1 = "SeedEnergyAllFEDs";
@@ -83,6 +89,7 @@ EcalCosmicsHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   
   naiveEvtNum_++;
 
+  cout << "  My Event: " << naiveEvtNum_ << " " << iEvent.id().run() << " " << iEvent.id().event() << " " << iEvent.time().value() << endl;
   //  cout << "Timestamp: " << iEvent.id().run() << " " << iEvent.id().event() << " " << iEvent.time().value() << endl;
 
   iEvent.getByLabel(barrelClusterCollection_, bccHandle);
@@ -247,9 +254,14 @@ EcalCosmicsHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     }      
 
   int  numberOfCosmics = 0;
+
+  int  numberOfCosmicsTop = 0;
+  int  numberOfCosmicsBottom = 0;
+
   //int eventnum = iEvent.id().event();
+  std::vector<EBDetId> seeds;
   
-     const reco::BasicClusterCollection *clusterCollection_p = bccHandle.product();
+  const reco::BasicClusterCollection *clusterCollection_p = bccHandle.product();
   for (reco::BasicClusterCollection::const_iterator clus = clusterCollection_p->begin(); clus != clusterCollection_p->end(); ++clus)
    {
      double energy = clus->energy();
@@ -293,9 +305,10 @@ EcalCosmicsHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
      
      numberOfCosmics++;
      
-     
      //Set some more values
      
+     seeds.push_back(maxDet);
+
      int ieta = maxDet.ieta();
      int iphi = maxDet.iphi();
      
@@ -309,7 +322,13 @@ EcalCosmicsHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
      //       //<< " : ic " <<  ic << " : hashedIndex " << hashedIndex 
      //				    << " : ieta " << ieta << " iphi " << iphi 
      //				    << " : nCosmics " << " " << cosmicCounter_ << " / " << naiveEvtNum_ << endl;      
-     
+     // top and bottom clusters
+     if (iphi>0&&iphi<180) { 
+       numberOfCosmicsTop++;
+     } else {
+       numberOfCosmicsBottom++;
+     }      
+
      // fill the proper hist
      TH1F* uRecHist = FEDsAndHists_[FEDid];
      TH1F* E2uRecHist = FEDsAndE2Hists_[FEDid];
@@ -511,11 +530,186 @@ EcalCosmicsHists::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
       if (FEDid>=640&&FEDid<=643)  allFedsTimingEbpBottomHist_->Fill(time);
     }
 
+   }
+
+
+  // TrackAssociator
+  
+  // get reco tracks 
+  edm::Handle<reco::TrackCollection> recoTracks;
+  iEvent.getByLabel("cosmicMuons", recoTracks);  
+
+  if ( recoTracks.isValid() ) {
+    //    LogWarning("EcalCosmicsHists") << "... Valid TrackAssociator recoTracks !!! " << recoTracks.product()->size();
+    std::map<int,std::vector<DetId> > trackDetIdMap;
+    int tracks = 0;
+    for(reco::TrackCollection::const_iterator recoTrack = recoTracks->begin(); recoTrack != recoTracks->end(); ++recoTrack){
+      
+      if(fabs(recoTrack->d0())>70 || fabs(recoTrack->dz())>70)
+        continue;
+      if(recoTrack->numberOfValidHits()<20)
+        continue;
+          
+      //if (recoTrack->pt() < 2) continue; // skip low Pt tracks       
+      
+      TrackDetMatchInfo info = trackAssociator_.associate(iEvent, iSetup, *recoTrack, trackParameters_);
+      
+//       edm::LogVerbatim("TrackAssociator") << "\n-------------------------------------------------------\n Track (pt,eta,phi): " << 
+// 	recoTrack->pt() << " , " << recoTrack->eta() << " , " << recoTrack->phi() ;
+//       edm::LogVerbatim("TrackAssociator") << "Ecal energy in crossed crystals based on RecHits: " << 
+// 	info.crossedEnergy(TrackDetMatchInfo::EcalRecHits);
+//       edm::LogVerbatim("TrackAssociator") << "Ecal energy in 3x3 crystals based on RecHits: " << 
+// 	info.nXnEnergy(TrackDetMatchInfo::EcalRecHits, 1);
+//       edm::LogVerbatim("TrackAssociator") << "Hcal energy in crossed towers based on RecHits: " << 
+// 	info.crossedEnergy(TrackDetMatchInfo::HcalRecHits);
+//       edm::LogVerbatim("TrackAssociator") << "Hcal energy in 3x3 towers based on RecHits: " << 
+// 	info.nXnEnergy(TrackDetMatchInfo::HcalRecHits, 1);
+//       edm::LogVerbatim("TrackAssociator") << "Number of muon segment matches: " << info.numberOfSegments();
+      
+//       std::cout << "\n-------------------------------------------------------\n Track (pt,eta,phi): " <<
+// 	recoTrack->pt() << " , " << recoTrack->eta() << " , " << recoTrack->phi() << std::endl; 
+//       std::cout << "Ecal energy in crossed crystals based on RecHits: " << 
+// 	info.crossedEnergy(TrackDetMatchInfo::EcalRecHits) << std::endl;
+//       std::cout << "Ecal energy in 3x3 crystals based on RecHits: " << 
+// 	info.nXnEnergy(TrackDetMatchInfo::EcalRecHits, 1) << std::endl;
+//       std::cout << "Hcal energy in crossed towers based on RecHits: " << 
+// 	info.crossedEnergy(TrackDetMatchInfo::HcalRecHits) << std::endl;
+//       std::cout << "Hcal energy in 3x3 towers based on RecHits: " << 
+// 	info.nXnEnergy(TrackDetMatchInfo::HcalRecHits, 1) << std::endl;
+      
+      for (unsigned int i=0; i<info.crossedEcalIds.size(); i++) {	 
+	// only checks for barrel
+	if (info.crossedEcalIds[i].det() == DetId::Ecal && info.crossedEcalIds[i].subdetId() == 1) {	     
+	  EBDetId ebDetId (info.crossedEcalIds[i]);	   
+	  trackAssoc_muonsEcal_->Fill(ebDetId.iphi(), ebDetId.ieta());
+	  std::cout << "Crossed iphi: " << ebDetId.iphi() 
+		    << " ieta: " << ebDetId.ieta() << " : nCross " << info.crossedEcalIds.size() << std::endl;
+
+	  EcalRecHitCollection::const_iterator thishit = hits->find(ebDetId);
+	  if (thishit == hits->end()) continue;
+	  
+	  EcalRecHit myhit = (*thishit);	 
+	  double thisamp = myhit.energy();
+	  std::cout << " Crossed energy: " << thisamp << " : nCross " << info.crossedEcalIds.size() << std::endl;	  
+	}
+      }
+
+      edm::LogVerbatim("TrackAssociator") << " crossedEcalIds size: " << info.crossedEcalIds.size()
+					  << " crossedEcalRecHits size: " << info.crossedEcalRecHits.size();
+      numberofCrossedEcalIdsHist_->Fill(info.crossedEcalIds.size());
+      tracks++;
+      if(info.crossedEcalIds.size()>0)
+        trackDetIdMap.insert(std::pair<int,std::vector<DetId> > (tracks,info.crossedEcalIds));
+    }      
+
+    
+    // Now to match recoTracks with cosmic clusters
+    
+    int numAssocTracks = 0;
+    int numAssocClusters = 0;
+    edm::LogVerbatim("TrackAssociator") << "Matching cosmic clusters to tracks...";
+    int numSeeds = seeds.size();
+    int numTracks = trackDetIdMap.size();
+    while(seeds.size() > 0 && trackDetIdMap.size() > 0)
+    {
+      double bestDr = 1000;
+      double bestDPhi = 1000;
+      double bestDEta = 1000;
+      double bestEtaTrack = 1000;
+      double bestEtaSeed = 1000;
+      double bestPhiTrack = 1000;
+      double bestPhiSeed = 1000;
+      EBDetId bestTrackDet;
+      EBDetId bestSeed;
+      int bestTrack;
+      std::map<EBDetId,EBDetId> trackDetIdToSeedMap;
+
+      edm::LogVerbatim("TrackAssociator") << "NumTracks:" << trackDetIdMap.size() << " numClusters:" << seeds.size();
+
+      for(std::vector<EBDetId>::const_iterator seedItr = seeds.begin(); seedItr != seeds.end(); ++seedItr)
+      {
+        for(std::map<int,std::vector<DetId> >::const_iterator mapItr = trackDetIdMap.begin();
+            mapItr != trackDetIdMap.end(); ++mapItr) {
+          for(unsigned int i=0; i<mapItr->second.size(); i++) {
+            // only checks for barrel
+            if(mapItr->second[i].det() == DetId::Ecal && mapItr->second[i].subdetId() == 1)
+            {
+              EBDetId ebDet = (mapItr->second[i]);
+              double seedEta = seedItr->ieta();
+              double deta = ebDet.ieta()-seedEta;
+              if(seedEta * ebDet.ieta() < 0 )
+                deta > 0 ? (deta=deta-1.) : (deta=deta+1.); 
+              double dR;
+              double dphi = ebDet.iphi()-seedItr->iphi();
+              if (abs(dphi) > 180)
+                dphi > 0 ?  (dphi=360-dphi) : (dphi=-360-dphi);
+              dR = sqrt(deta*deta + dphi*dphi);
+              if(dR < bestDr)
+              {
+                bestDr = dR;
+                bestDPhi = dphi;
+                bestDEta = deta;
+                bestTrackDet = mapItr->second[i];
+                bestTrack = mapItr->first;
+                bestSeed = (*seedItr);
+                bestEtaTrack = ebDet.ieta();
+                bestEtaSeed = seedEta;
+                bestPhiTrack = ebDet.iphi();
+                bestPhiSeed = seedItr->iphi();
+              }
+            }
+          }
+        }
+      }
+      if(bestDr < 1000)
+      {
+        edm::LogVerbatim("TrackAssociator") << "Best deltaR from matched DetId's to cluster:" << bestDr;
+        deltaRHist_->Fill(bestDr);
+        deltaPhiHist_->Fill(bestDPhi);
+        deltaEtaHist_->Fill(bestDEta);
+        deltaEtaDeltaPhiHist_->Fill(bestDEta,bestDPhi);
+        seedTrackEtaHist_->Fill(bestEtaSeed,bestEtaTrack);
+        seedTrackPhiHist_->Fill(bestPhiSeed,bestPhiTrack);
+        seeds.erase(find(seeds.begin(),seeds.end(), bestSeed));
+        trackDetIdMap.erase(trackDetIdMap.find(bestTrack));
+        trackDetIdToSeedMap[bestTrackDet] = bestSeed;
+        numAssocTracks++;
+        numAssocClusters++;
+      }
+      else
+      {
+        edm::LogVerbatim("TrackAssociator") << "could not match cluster seed to track." << bestDr;
+        break; // no match found
+      }
+    }
+    if(numSeeds>0 && numTracks>0)
+    {
+      ratioAssocClustersHist_->AddBinContent(1,numAssocClusters);
+      ratioAssocClustersHist_->AddBinContent(2,numSeeds);
+    }
+    if(numTracks>0) 
+    {
+      ratioAssocTracksHist_->AddBinContent(1,numAssocTracks);
+      ratioAssocTracksHist_->AddBinContent(2,numTracks);
+      numberofCosmicsWTrackHist_->Fill(numSeeds);
+    }
+  } else {
+    LogWarning("EcalCosmicsHists") << "!!! No TrackAssociator recoTracks !!!";
+    
   }
+  // end of TrackAssociator code
   
   numberofCosmicsHist_->Fill(numberOfCosmics);
   if ( numberOfCosmics > 0 ) numberofGoodEvtFreq_->Fill(naiveEvtNum_);
   if ( numberOfCosmics > 0 ) cosmicCounter_++;
+
+  //  LogWarning("EcalCosmicsHists") << " top & bottom " << numberOfCosmicsTop << " " << numberOfCosmicsBottom << " --> " << numberOfCosmics << endl;
+  
+  if (numberOfCosmicsTop&&numberOfCosmicsBottom) {
+    cosmicCounterTopBottom_++;
+    numberofCosmicsTopBottomHist_->Fill(numberOfCosmicsTop+numberOfCosmicsBottom);
+  }
+
 
 }
 
@@ -667,8 +861,12 @@ EcalCosmicsHists::beginJob(const edm::EventSetup&)
   allFedsTimingEbpBottomHist_ = new TH1F("timeEBPBottom","time for FEDs in EB+ Bottom;Relative Time (1 clock = 25ns)",78,-7,7);
   allFedsTimingEbmBottomHist_ = new TH1F("timeEBMBottom","time for FEDs in EB- Bottom;Relative Time (1 clock = 25ns)",78,-7,7);
 
-  numberofCosmicsHist_ = new TH1F("numberofCosmicsPerEvent","Number of cosmics per event;Number of Cosmics",10,0,10);
+  numberofCosmicsHist_ = new TH1F("numberofCosmicsPerEvent","Number of cosmics per event;Number of Cosmics",30,0,30);
+  numberofCosmicsWTrackHist_ = new TH1F("numberofCosmicsWTrackPerEvent","Number of cosmics with track per event",30,0,30);
+  numberofCosmicsTopBottomHist_ = new TH1F("numberofCosmicsTopBottomPerEvent","Number of top bottom cosmics per event;Number of Cosmics",30,0,30);
   numberofGoodEvtFreq_  = new TH1F("frequencyOfGoodEvents","Number of events with cosmic vs Event;Event Number;Number of Good Events/100 Events",2000,0,200000);
+
+  numberofCrossedEcalIdsHist_ = new TH1F("numberofCrossedEcalCosmicsPerEvent","Number of crossed ECAL cosmics per event;Number of Crossed Cosmics",10,0,10);
 
   allOccupancyExclusiveECAL_            = new TH2F("OccupancyAllEvents_ExclusiveECAL","Occupancy all events Exclusive ECAL ;i#phi;i#eta",360,1.,361.,172,-86,86);
   allOccupancyCoarseExclusiveECAL_      = new TH2F("OccupancyAllEventsCoarse_ExclusiveECAL","Occupancy all events Coarse Exclusive ECAL;i#phi;i#eta",360/5,ttPhiBins,35, ttEtaBins);
@@ -730,9 +928,17 @@ EcalCosmicsHists::beginJob(const edm::EventSetup&)
   triggerExclusiveHist_->GetXaxis()->SetBinLabel(4,"RPC");
   triggerExclusiveHist_->GetXaxis()->SetBinLabel(5,"CSC");
 
+  runNumberHist_ = new TH1F("runNumberHist","Run Number",1,0,1);
 
-  runNumberHist_ = new TH1F("runNumberHist","Run Number",1,0,1);    
-
+  deltaRHist_ = new TH1F("deltaRHist","deltaR",500,-0.5,499.5); 
+  deltaEtaHist_ = new TH1F("deltaIEtaHist","deltaIEta",170,-85.5,84.5);
+  deltaPhiHist_ = new TH1F("deltaIPhiHist","deltaIPhi",720,-360.5,359.5);
+  ratioAssocTracksHist_ = new TH1F("ratioAssocTracks","num assoc. tracks/tracks through Ecal",11,0,1.1);
+  ratioAssocClustersHist_ = new TH1F("ratioAssocClusters","num assoc. clusters/total clusters",11,0,1.1);
+  trackAssoc_muonsEcal_= new TH2F("trackAssoc_muonsEcal","Map of muon hits in Ecal", 360,1.,361.,172,-86,86);//360, 0 , 360, 170,-85 ,85);
+  deltaEtaDeltaPhiHist_ = new TH2F("deltaEtaDeltaPhi","Delta ieta vs. delta iphi",170,-85.5,84.5,720,-360.5,359.5); 
+  seedTrackEtaHist_ = new TH2F("seedTrackEta","track ieta vs. seed ieta",170,-85.5,84.5,170,-85.5,84.5); 
+  seedTrackPhiHist_ = new TH2F("seedTrackPhi","track iphi vs. seed iphi",720,-360.5,359.5,720,-360.5,359.5); 
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
@@ -893,15 +1099,31 @@ EcalCosmicsHists::endJob()
 
 
   numberofCosmicsHist_->Write();
+  numberofCosmicsWTrackHist_->Write();
+  numberofCosmicsTopBottomHist_->Write();
   numberofGoodEvtFreq_->Write();
+  numberofCrossedEcalIdsHist_->Write();
 
   runNumberHist_->SetBinContent(1,runNum_);
   runNumberHist_->Write();
+
+  deltaRHist_->Write();
+  deltaEtaHist_->Write();
+  deltaPhiHist_->Write();
+  ratioAssocClustersHist_->Write();
+  ratioAssocTracksHist_->Write();
+  deltaEtaDeltaPhiHist_->Write();
+  seedTrackPhiHist_->Write();
+  seedTrackEtaHist_->Write();
+  
+  trackAssoc_muonsEcal_->Write();
 
   root_file_.Close();
 
  
   LogWarning("EcalCosmicsHists") << "---> Number of cosmic events: " << cosmicCounter_ << " in " << naiveEvtNum_ << " events.";
+
+  LogWarning("EcalCosmicsHists") << "---> Number of top+bottom cosmic events: " << cosmicCounterTopBottom_ << " in " << cosmicCounter_ << " cosmics in " << naiveEvtNum_ << " events.";
 
 }
 

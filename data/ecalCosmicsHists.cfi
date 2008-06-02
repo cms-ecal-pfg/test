@@ -33,4 +33,9 @@ module ecalCosmicsHists = EcalCosmicsHists{
 
       # Global trigger tag
       string l1GlobalReadoutRecord = "gtDigis"
+
+      # Track associator
+      include "TrackingTools/TrackAssociator/data/default.cfi"
+
+
 }
