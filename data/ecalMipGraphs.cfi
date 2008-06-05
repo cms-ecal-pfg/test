@@ -16,8 +16,8 @@ module ecalMipGraphs = EcalMipGraphs{
       # masked EBids
       untracked vstring maskedEBs = {"-1"}
 
-      # parameter for the energy threshold
-      untracked double amplitudeThreshold = .140
+      # parameter for the energy threshold (GeV)
+      untracked double amplitudeThreshold = 0.11
 
       # parameter for the name of the output root file with TH1F
       untracked string fileName = 'ecalMipGraphs-'

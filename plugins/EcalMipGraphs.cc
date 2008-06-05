@@ -42,7 +42,7 @@ EcalMipGraphs::EcalMipGraphs(const edm::ParameterSet& iConfig) :
   runNum_(-1),
   side_ (iConfig.getUntrackedParameter<int>("side", 3)),
   givenSeedCry_ (iConfig.getUntrackedParameter<int>("seedCry",0)),
-  threshold_ (iConfig.getUntrackedParameter<double>("amplitudeThreshold", 12.0)),
+  threshold_ (iConfig.getUntrackedParameter<double>("amplitudeThreshold", 0.11)),
   fileName_ (iConfig.getUntrackedParameter<std::string>("fileName", std::string("ecalMipGraphs")))
 {
   vector<int> listDefaults;
