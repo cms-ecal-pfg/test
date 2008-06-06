@@ -96,8 +96,14 @@ EcalTPGAnalyzer::EcalTPGAnalyzer(const edm::ParameterSet&  iConfig)
   TPEmulMax_ = new TH1F("TPEmulMax", "TP Emulator max", 256, 0., 256.) ;
   TPEmulMax_->GetXaxis()->SetTitle("TP (ADC)") ;
 
-  TPMatchEmul_ = new TH1F("TPMatchEmul", "TP data matching Emulator",6 , -1., 5.) ;
-  TPEmulMaxIndex_ = new TH1F("TPEmulMaxIndex", "Index of the max TP from Emulator", 6, -1., 5.) ;
+  TPMatchEmul_ = new TH1F("TPMatchEmul", "TP data matching Emulator", 7, -1., 6.) ;
+  TPEmulMaxIndex_ = new TH1F("TPEmulMaxIndex", "Index of the max TP from Emulator", 7, -1., 6.) ;
+  TPMatchEmul3D_ = new TH3I("TPMatchEmul3D", "TP data matching Emulator", 72, 1, 73, 38, -19, 19, 7, -1, 6) ;
+  TPMatchEmul3D_->GetYaxis()->SetTitle("eta index") ;
+  TPMatchEmul3D_->GetXaxis()->SetTitle("phi index") ;
+  EmulMatchTP3D_ = new TH3I("EmulMatchTP3D", "Emulator matching TP data", 72, 1, 73, 38, -19, 19, 7, -1, 6) ;
+  EmulMatchTP3D_->GetYaxis()->SetTitle("eta index") ;
+  EmulMatchTP3D_->GetXaxis()->SetTitle("phi index") ;
 }
 
 
@@ -116,6 +122,8 @@ EcalTPGAnalyzer::~EcalTPGAnalyzer()
   TPEmul_->Write() ;
   TPEmulMax_->Write() ;
   TPMatchEmul_->Write() ; 
+  TPMatchEmul3D_->Write() ; 
+  EmulMatchTP3D_->Write() ; 
   TPEmulMaxIndex_->Write() ;
 
   histfile_->Write();
@@ -272,7 +280,45 @@ void EcalTPGAnalyzer::analyze(const edm::Event& iEvent, const  edm::EventSetup &
     for (unsigned int i=0;i<tp.product()->size();i++) {
       EcalTriggerPrimitiveDigi d = (*(tp.product()))[i];
       const EcalTrigTowerDetId TPtowid= d.id();
+
+//       if (TPtowid.zside()>0) {
+// 	// trick if unpacker is still wrong
+// 	int phi = TPtowid.iphi() ;
+// 	if (phi==72) phi=1 ;
+// 	else if (phi==71) phi=2 ;
+// 	else if (phi==1) phi=72 ;
+// 	else if (phi==2) phi=71 ;
+// 	else {
+// 	  phi -= 3 ;
+// 	  int swap[4] = {3,2,1,0} ;
+// 	  uint col = phi%4 ;
+// 	  uint row = phi/4 ;
+// 	  phi = swap[col]+row*4+3 ;
+// 	}
+// 	EcalTrigTowerDetId TPtowidTrick(TPtowid.zside() , TPtowid.subDet(), TPtowid.ietaAbs(), phi) ;
+// 	itTT = mapTower.find(TPtowidTrick) ;
+// 	if (itTT != mapTower.end()) {
+// 	  (itTT->second).tpgADC_ = d.compressedEt() ;
+// 	  (itTT->second).ttf_ = d.ttFlag() ;
+// 	  (itTT->second).fg_ = d.fineGrain() ;      
+// 	}
+// 	else {
+// 	  towerEner tE ;
+// 	  tE.iphi_ = TPtowidTrick.iphi() ;
+// 	  tE.ieta_ = TPtowidTrick.ieta() ;
+// 	  tE.tpgADC_ = d.compressedEt() ;
+// 	  tE.ttf_ = d.ttFlag() ;
+// 	  tE.fg_ = d.fineGrain() ;    
+// 	  mapTower[TPtowidTrick] = tE ;
+// 	}
+
+// 	if (d.compressedEt()>0 && d.compressedEt()<25) 
+// 	  std::cout<<"Data (phi,eta, Et) ="<<TPtowidTrick.iphi()<<" "
+// 		   <<TPtowidTrick.ieta()<<" "<<d.compressedEt()<<std::endl ;
+//       }
       
+//       else {
+
       itTT = mapTower.find(TPtowid) ;
       if (itTT != mapTower.end()) {
 	(itTT->second).tpgADC_ = d.compressedEt() ;
@@ -288,10 +334,14 @@ void EcalTPGAnalyzer::analyze(const edm::Event& iEvent, const  edm::EventSetup &
 	tE.fg_ = d.fineGrain() ;    
 	mapTower[TPtowid] = tE ;
       }
-
-      //if (d.compressedEt()>0) std::cout<<"Data (phi,eta, Et, i) ="<<TPtowid.iphi()<<" "<<TPtowid.ieta()<<" "<<d.compressedEt()<<std::endl ;
+      
+      if (d.compressedEt()>0 && d.compressedEt()<25) 
+	std::cout<<"Data (phi,eta, Et) ="<<TPtowid.iphi()<<" "
+		 <<TPtowid.ieta()<<" "<<d.compressedEt()<<std::endl ;
     }
+
   }
+
 
 
   // Get Emulators TP
@@ -333,7 +383,7 @@ void EcalTPGAnalyzer::fillShape(EBDataFrame & df)
 {
   float max = -999 ;
   int gain, adc ;
-  float data ;
+  float data = 0 ;
   if (df[0].gainId() != 1 || df[1].gainId() != 1) return ; // first 2 samples must be in gain x12
   float mean = 0.5*(df[0].adc()+df[1].adc()) ;
   for (int i = 0 ; i<10 ; i++) {
@@ -390,15 +440,39 @@ void  EcalTPGAnalyzer::fillEnergyPlots(towerEner & t)
 
 void EcalTPGAnalyzer::fillTPMatchPlots(towerEner & t)
 {
-  bool match(false) ;
   if (t.tpgADC_>0) {
+    bool match(false) ;
     for (int i=0 ; i<5 ; i++)
       if ((t.tpgEmul_[i]&0xff) == t.tpgADC_) {
-	TPMatchEmul_->Fill(i) ;
+	TPMatchEmul_->Fill(i+1) ;
+	TPMatchEmul3D_->Fill(t.iphi_, t.ieta_, i+1) ;
 	match = true ;
       }
-    if (!match) TPMatchEmul_->Fill(-1) ;
+    if (!match) {
+      TPMatchEmul_->Fill(-1) ;
+      TPMatchEmul3D_->Fill(t.iphi_, t.ieta_, -1) ;
+      std::cout<<"Edata, eta, phi:"<<t.tpgADC_<<" "<<t.ieta_<<" "<<t.iphi_<<std::endl ;
+      for (int i=0 ; i<5 ; i++) std::cout<<"Emul:"<<(t.tpgEmul_[i]&0xff)<<" " ;
+      std::cout<<std::endl ;
+      for (int i=0 ; i<10 ; i++) std::cout<<"Shape:"<<t.data_[i]<<" " ;
+      std::cout<<std::endl ;
+    }
   }
+
+  bool emulActive(false) ;
+  for (int i=0 ; i<5 ; i++) if ((t.tpgEmul_[i]&0xff)>0) emulActive=true ;
+  if (emulActive) {
+    bool match(false) ;
+    for (int i=0 ; i<5 ; i++)
+      if ((t.tpgEmul_[i]&0xff) == t.tpgADC_ && (t.tpgEmul_[i]&0xff)>0) {
+	EmulMatchTP3D_->Fill(t.iphi_, t.ieta_, i+1) ;
+	match = true ;
+      }
+    if (!match) {
+      EmulMatchTP3D_->Fill(t.iphi_, t.ieta_, -1) ;
+    }
+  }
+
 
   int max = 0 ;
   int index = -1 ;
@@ -407,6 +481,6 @@ void EcalTPGAnalyzer::fillTPMatchPlots(towerEner & t)
       max = (t.tpgEmul_[i]&0xff) ; 
       index = i ;
     }
-  if (max>0) TPEmulMaxIndex_->Fill(index) ;
+  if (max>0) TPEmulMaxIndex_->Fill(index+1) ;
 
 }

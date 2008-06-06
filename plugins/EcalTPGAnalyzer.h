@@ -17,6 +17,7 @@
 #include <TFile.h>
 #include <TTree.h>
 #include <TH2.h>
+#include <TH3.h>
 
 
 class CaloSubdetectorGeometry ;
@@ -35,7 +36,7 @@ class towerEner {
       iphi_(-999), ieta_(-999), iSM_(0), ttf_(-999), fg_(-999)
   { 
     for (int i=0 ; i<10 ; i ++) data_[i] = 0. ; 
-    for (int i=0 ; i<5 ; i ++) tpgEmul_[i] = 0 ; 
+    for (int i=0 ; i<5 ; i ++) tpgEmul_[i] = -1 ; 
   }
 };
 
@@ -55,8 +56,8 @@ private:
   void fillTPMatchPlots(towerEner & t) ;
 
 private:
-  TFile *histfile_;
-  TTree *tree_ ;
+  TFile * histfile_;
+  TTree * tree_ ;
   TH2F * shape_[36] ;
   TH2F * shapeMax_ ;
   TH2F * occupancyTP_ ;
@@ -70,6 +71,8 @@ private:
   TH1F * TPEmul_ ;
   TH1F * TPEmulMax_ ;
   TH1F * TPMatchEmul_ ;
+  TH3I * TPMatchEmul3D_ ;
+  TH3I * EmulMatchTP3D_ ;
   TH1F * TPEmulMaxIndex_ ;
 
   std::string label_;
