@@ -85,6 +85,7 @@ private:
   bool useEE_ ;
   int adcCut_, shapeCut_, occupancyCut_ ;
   int tpgRef_ ;
+  bool print_ ;
 
   const CaloSubdetectorGeometry * theEndcapGeometry_ ;
   const CaloSubdetectorGeometry * theBarrelGeometry_ ;

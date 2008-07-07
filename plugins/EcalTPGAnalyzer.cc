@@ -53,6 +53,8 @@ EcalTPGAnalyzer::EcalTPGAnalyzer(const edm::ParameterSet&  iConfig)
   shapeCut_ =  iConfig.getParameter<int>("shapeCut");
   occupancyCut_ =  iConfig.getParameter<int>("occupancyCut");
   tpgRef_ =  iConfig.getParameter<int>("TPGEmulatorIndexRef") ;
+  print_ = iConfig.getParameter<bool>("Print");
+
 
   histfile_ = new TFile("histosTPG.root","RECREATE");
 
@@ -146,6 +148,7 @@ void EcalTPGAnalyzer::beginJob(const edm::EventSetup& evtSetup)
 
 void EcalTPGAnalyzer::analyze(const edm::Event& iEvent, const  edm::EventSetup & iSetup)
 {
+  if (print_) std::cout<<"==========="<<iEvent.id()<<std::endl ;
   using namespace edm;
   using namespace std;
   
@@ -335,9 +338,10 @@ void EcalTPGAnalyzer::analyze(const edm::Event& iEvent, const  edm::EventSetup &
 	mapTower[TPtowid] = tE ;
       }
       
-      if (d.compressedEt()>0 && d.compressedEt()<25) 
+      if (d.compressedEt()>0 && print_) 
 	std::cout<<"Data (phi,eta, Et) ="<<TPtowid.iphi()<<" "
 		 <<TPtowid.ieta()<<" "<<d.compressedEt()<<std::endl ;
+
     }
 
   }
@@ -361,9 +365,13 @@ void EcalTPGAnalyzer::analyze(const edm::Event& iEvent, const  edm::EventSetup &
       mapTower[TPtowid] = tE ;
     }
 
-//     for (int j=0 ; j<5 ; j++) {
-//       if ((d[j].raw() & 0xff)>0) std::cout<<"Emulateur (phi,eta, Et, i) ="<<TPtowid.iphi()<<" "<<TPtowid.ieta()<<" "<<(d[j].raw() & 0xff)<<" "<<j<<std::endl ;
-//     }
+    if (print_) {
+      for (int j=0 ; j<5 ; j++) {
+	if ((d[j].raw() & 0xff)>0) std::cout<<"Emulateur (phi,eta, Et, i) ="
+					    <<TPtowid.iphi()<<" "<<TPtowid.ieta()<<" "
+					    <<(d[j].raw() & 0xff)<<" "<<j<<std::endl ;
+      }
+    }
   }
 
 
@@ -440,7 +448,7 @@ void  EcalTPGAnalyzer::fillEnergyPlots(towerEner & t)
 
 void EcalTPGAnalyzer::fillTPMatchPlots(towerEner & t)
 {
-  if (t.tpgADC_>0) {
+  if (t.tpgADC_>0 && t.ttf_>0) {
     bool match(false) ;
     for (int i=0 ; i<5 ; i++)
       if ((t.tpgEmul_[i]&0xff) == t.tpgADC_) {
